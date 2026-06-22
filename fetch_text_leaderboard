@@ -1,43 +1,103 @@
 """
-DATA FETCHER: LMArena Text Leaderboard
-NO SCIPY NEEDED - Uses only pandas, numpy, and requests
+DATA FETCHER: Multiple Sources
+Handles LMArena, MMLU-Pro, SWE-bench, and others
 """
 
 import pandas as pd
 import sqlite3
 import requests
 import numpy as np
-import os
 from datetime import datetime
+import json
 
-# ============================================
-# CONFIGURATION - Change these as needed
-# ============================================
-
-# Database file name
 DB_NAME = "benchmark.db"
 
-# Sources to fetch (add new ones here later)
+# ============================================
+# PARSER FUNCTIONS (One per source format)
+# ============================================
+
+def parse_lmaena_format(response):
+    """Parser for LMArena API (wulong format)"""
+    data = response.json()
+    models = data.get("models", [])
+    if models:
+        df = pd.DataFrame(models)
+        # Standardize column names
+        if 'score' not in df.columns and 'elo' in df.columns:
+            df = df.rename(columns={'elo': 'score'})
+        return df
+    return None
+
+def parse_mmlu_format(response):
+    """Parser for MMLU-Pro format"""
+    data = response.json()
+    # MMLU often returns: {"model_name": {"accuracy": 0.85, ...}}
+    rows = []
+    for model_name, scores in data.items():
+        rows.append({
+            'model': model_name,
+            'score': scores.get('accuracy', 0) * 100,  # Convert to 0-100
+            'vendor': scores.get('organization', 'Unknown')
+        })
+    return pd.DataFrame(rows) if rows else None
+
+def parse_swebench_format(response):
+    """Parser for SWE-bench format"""
+    data = response.json()
+    # SWE-bench often returns: {"data": [{"model": "gpt-4", "resolved": 0.62}]}
+    items = data.get("data", [])
+    rows = []
+    for item in items:
+        rows.append({
+            'model': item.get('model', 'Unknown'),
+            'score': item.get('resolved', 0) * 100,  # Convert to percentage
+            'vendor': item.get('organization', 'Unknown')
+        })
+    return pd.DataFrame(rows) if rows else None
+
+def parse_csv_format(response):
+    """Parser for CSV files (Hugging Face, etc.)"""
+    from io import StringIO
+    df = pd.read_csv(StringIO(response.text))
+    # Try to find the score column
+    score_cols = ['score', 'accuracy', 'value', 'elo', 'rating']
+    found_col = None
+    for col in score_cols:
+        if col in df.columns:
+            found_col = col
+            break
+    if found_col:
+        # If scores are 0-1, convert to 0-100
+        if df[found_col].max() <= 1:
+            df[found_col] = df[found_col] * 100
+        return df
+    return None
+
+# ============================================
+# CONFIGURATION - Add your sources here
+# ============================================
+
+# At the top, combine the sources
 SOURCES = [
     {
         "name": "lmaena_text",
         "url": "https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text",
-        "description": "LMArena Text Leaderboard (Overall)"
+        "description": "LMArena Text Leaderboard",
+        "parser": parse_lmaena_format
     },
-    # To add a new source, uncomment and modify below:
-    # {
-    #     "name": "mmlu_pro",
-    #     "url": "https://api.example.com/mmlu-pro",
-    #     "description": "MMLU-Pro Benchmark"
-    # },
+    {
+        "name": "mmlu_pro",
+        "url": "https://huggingface.co/datasets/TIGER-Lab/mmlu_pro_leaderboard_submission",
+        "description": "MMLU-Pro Leaderboard",
+        "parser": parse_mmlu_pro_leaderboard  # Note: this takes no URL parameter
+    },
 ]
 
 # ============================================
-# NORMALIZATION FUNCTIONS (No SciPy needed!)
+# NORMALIZATION FUNCTIONS
 # ============================================
 
 def normalize_minmax(df, score_col='score'):
-    """Method 1: Min-Max scaling (0-100)"""
     min_val = df[score_col].min()
     max_val = df[score_col].max()
     if max_val == min_val:
@@ -45,29 +105,23 @@ def normalize_minmax(df, score_col='score'):
     return (df[score_col] - min_val) / (max_val - min_val) * 100
 
 def normalize_percentile(df, score_col='score'):
-    """Method 2: Percentile ranking (0-100) - No SciPy needed!"""
     scores = df[score_col].values
     def get_percentile(x):
-        # Count how many scores are lower than x
         lower_count = np.sum(scores < x)
-        # Add half of the ties (for smoother ranking)
         tie_count = np.sum(scores == x)
         return (lower_count + 0.5 * tie_count) / len(scores) * 100
     return df[score_col].apply(get_percentile)
 
 def normalize_zscore(df, score_col='score'):
-    """Method 3: Z-score mapped to 0-100 - No SciPy needed!"""
     scores = df[score_col].values
     mean = np.mean(scores)
     std = np.std(scores)
     if std == 0:
         return pd.Series([50] * len(df), index=df.index)
     z_scores = (scores - mean) / std
-    # Clip to [-3, 3] and map to [0, 100]
     return np.clip((z_scores + 3) / 6 * 100, 0, 100)
 
 def apply_all_normalizations(df, score_col='score'):
-    """Apply all three normalization methods"""
     df['norm_minmax'] = normalize_minmax(df, score_col)
     df['norm_percentile'] = normalize_percentile(df, score_col)
     df['norm_zscore'] = normalize_zscore(df, score_col)
@@ -75,11 +129,19 @@ def apply_all_normalizations(df, score_col='score'):
     return df
 
 # ============================================
-# FETCH FUNCTIONS
+# FETCH FUNCTION
 # ============================================
 
-def fetch_lmaena_leaderboard(url):
-    """Fetch data from LMArena API"""
+def fetch_source(source_config):
+    """Fetch a source using its specific parser"""
+    name = source_config["name"]
+    url = source_config["url"]
+    description = source_config.get("description", "")
+    parser = source_config.get("parser", parse_lmaena_format)  # Default to LMArena parser
+    
+    print(f"\n📊 Processing: {name}")
+    print(f"   Description: {description}")
+    
     try:
         print(f"  📥 Fetching: {url}")
         response = requests.get(url, timeout=15)
@@ -87,24 +149,27 @@ def fetch_lmaena_leaderboard(url):
         if response.status_code != 200:
             print(f"  ❌ Error {response.status_code}: {response.text[:100]}")
             return None
-            
-        data = response.json()
-        models = data.get("models", [])
         
-        if not models:
-            print("  ⚠️ No models found in response")
+        # Use the specified parser
+        df = parser(response)
+        
+        if df is None or df.empty:
+            print(f"  ❌ Parser returned no data")
             return None
-            
-        df = pd.DataFrame(models)
+        
+        # Ensure we have required columns
+        if 'model' not in df.columns:
+            print(f"  ❌ No 'model' column found")
+            return None
+        
+        if 'score' not in df.columns:
+            print(f"  ❌ No 'score' column found")
+            print(f"  Available columns: {df.columns.tolist()}")
+            return None
+        
         print(f"  ✅ Fetched {len(df)} models")
         return df
         
-    except requests.exceptions.Timeout:
-        print("  ❌ Timeout error")
-        return None
-    except requests.exceptions.ConnectionError:
-        print("  ❌ Connection error")
-        return None
     except Exception as e:
         print(f"  ❌ Error: {e}")
         return None
@@ -113,87 +178,38 @@ def fetch_lmaena_leaderboard(url):
 # MAIN PROCESSING
 # ============================================
 
-def process_source(source_config):
-    """Process a single data source"""
-    name = source_config["name"]
-    url = source_config["url"]
-    description = source_config.get("description", "")
-    
-    print(f"\n📊 Processing: {name}")
-    print(f"   Description: {description}")
-    
-    # Step 1: Fetch data
-    df = fetch_lmaena_leaderboard(url)
-    if df is None or df.empty:
-        print(f"  ⚠️ Skipping {name} - no data")
-        return False
-    
-    # Step 2: Find the score column
-    score_col = 'score'
-    if score_col not in df.columns:
-        # Try common column names
-        for col in ['elo', 'rating', 'value']:
-            if col in df.columns:
-                score_col = col
-                break
-        else:
-            print(f"  ❌ No score column found in {name}")
-            print(f"  Available columns: {df.columns.tolist()}")
-            return False
-    
-    # Step 3: Apply normalizations
-    df = apply_all_normalizations(df, score_col)
-    
-    # Step 4: Save to database
-    conn = sqlite3.connect(DB_NAME)
-    df.to_sql(name, conn, if_exists='replace', index=False)
-    conn.close()
-    
-    print(f"  💾 Saved to table: {name}")
-    print(f"  📊 Raw score range: {df[score_col].min():.1f} - {df[score_col].max():.1f}")
-    print(f"  📈 Normalized range: {df['norm_minmax'].min():.1f} - {df['norm_minmax'].max():.1f}")
-    
-    return True
-
 def main():
-    """Main execution"""
     print("=" * 60)
-    print("📊 LMArena TEXT LEADERBOARD FETCHER")
+    print("📊 MULTI-SOURCE LEADERBOARD FETCHER")
     print("=" * 60)
     print(f"🕐 Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"📁 Database: {DB_NAME}")
     print(f"📋 Sources to fetch: {len(SOURCES)}")
     
-    # Process each source
+    conn = sqlite3.connect(DB_NAME)
     successful = 0
+    
     for source in SOURCES:
-        if process_source(source):
-            successful += 1
-    
-    # Summary
-    print("\n" + "=" * 60)
-    print("✅ COMPLETE!")
-    print(f"   ✅ Successful: {successful}/{len(SOURCES)}")
-    print(f"   📁 Database: {DB_NAME}")
-    print("=" * 60)
-    
-    # Show a sample of the data
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        df_sample = pd.read_sql_query(
-            "SELECT model, score, norm_minmax, norm_percentile, norm_zscore, norm_combined FROM lmaena_text LIMIT 5", 
-            conn
-        )
-        conn.close()
+        name = source["name"]
+        df = fetch_source(source)
         
-        print("\n📊 Sample data from lmaena_text:")
-        print(df_sample.round(1).to_string())
-    except Exception as e:
-        print(f"\n⚠️ Could not preview data: {e}")
-
-# ============================================
-# RUN THE SCRIPT
-# ============================================
+        if df is not None and not df.empty:
+            # Apply normalizations
+            df = apply_all_normalizations(df, 'score')
+            
+            # Save to database
+            df.to_sql(name, conn, if_exists='replace', index=False)
+            print(f"  💾 Saved to table: {name}")
+            print(f"  📊 Raw range: {df['score'].min():.1f} - {df['score'].max():.1f}")
+            print(f"  📈 Normalized range: {df['norm_minmax'].min():.1f} - {df['norm_minmax'].max():.1f}")
+            successful += 1
+        else:
+            print(f"  ⚠️ Skipping {name} - no data")
+    
+    conn.close()
+    
+    print("\n" + "=" * 60)
+    print(f"✅ Complete! {successful}/{len(SOURCES)} sources fetched")
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()

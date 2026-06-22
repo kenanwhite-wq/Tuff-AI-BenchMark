@@ -1,0 +1,614 @@
+"""
+WEB INTERFACE
+Displays composite scores, feed entries, and source breakdowns.
+"""
+
+from flask import Flask, render_template_string, request, jsonify
+import sqlite3
+import pandas as pd
+from datetime import datetime
+from config import DB_NAME, SOURCES, get_composite_scores, get_latest_normalized
+
+app = Flask(__name__)
+
+# ============================================
+# HTML TEMPLATE
+# ============================================
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Benchmark Aggregator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #1a1a1a;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0 0 5px 0;
+            font-size: 28px;
+        }
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        .header .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+            flex-wrap: wrap;
+        }
+        .header .stats span {
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        .composite-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .composite-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+        .composite-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .composite-card .rank {
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+        }
+        .composite-card .model {
+            font-weight: 600;
+            font-size: 14px;
+            margin: 5px 0 2px 0;
+            word-break: break-word;
+        }
+        .composite-card .score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+        .composite-card .sources {
+            font-size: 11px;
+            color: #888;
+        }
+        .composite-card .sources .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .composite-card .sources .dot.on { background: #22c55e; }
+        .composite-card .sources .dot.off { background: #d1d5db; }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .section h2 .count {
+            font-size: 14px;
+            color: #888;
+            font-weight: 400;
+        }
+        .feed-item {
+            padding: 12px 15px;
+            border-left: 4px solid #2563eb;
+            margin-bottom: 10px;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+        .feed-item .tier-big { border-left-color: #dc2626; }
+        .feed-item .tier-moderate { border-left-color: #f59e0b; }
+        .feed-item .tier-small { border-left-color: #22c55e; }
+        .feed-item .headline {
+            font-weight: 500;
+            font-size: 15px;
+        }
+        .feed-item .meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+        .feed-item .body {
+            font-size: 14px;
+            color: #555;
+            margin-top: 4px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+        .badge-big { background: #fecaca; color: #991b1b; }
+        .badge-moderate { background: #fde68a; color: #92400e; }
+        .badge-small { background: #bbf7d0; color: #166534; }
+        .badge-approved { background: #d1fae5; color: #065f46; }
+        .badge-draft { background: #fef3c7; color: #92400e; }
+        .badge-source {
+            background: #e5e7eb;
+            color: #374151;
+            font-weight: 400;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #e5e7eb;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .tab.active {
+            background: #2563eb;
+            color: white;
+        }
+        .tab:hover {
+            opacity: 0.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background: #fafafa;
+        }
+        .score-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .score-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: #2563eb;
+            flex: 1;
+            min-width: 40px;
+        }
+        .table-wrap {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .source-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: #e5e7eb;
+            margin: 2px;
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            padding: 20px;
+        }
+        .empty-state {
+            color: #888;
+            text-align: center;
+            padding: 30px;
+        }
+        .empty-state .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .refresh-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .refresh-btn:hover {
+            background: #1d4ed8;
+        }
+        @media (max-width: 700px) {
+            body { padding: 10px; }
+            .header { padding: 20px; }
+            .header h1 { font-size: 22px; }
+            .section { padding: 15px; }
+            .composite-grid { grid-template-columns: 1fr 1fr; }
+            .composite-card .score { font-size: 20px; }
+            table { font-size: 12px; }
+            th, td { padding: 6px 8px; }
+            .feed-item .headline { font-size: 14px; }
+        }
+        @media (max-width: 400px) {
+            .composite-grid { grid-template-columns: 1fr 1fr; }
+            .composite-card { padding: 10px; }
+            .composite-card .model { font-size: 12px; }
+            .composite-card .score { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🤖 AI Benchmark Aggregator</h1>
+        <div class="subtitle">Real-time leaderboard aggregation</div>
+        <div class="stats">
+            <span>🕐 Updated: {{ now }}</span>
+            <span>📊 {{ composites|length }} models</span>
+            <span>📁 {{ sources|length }} sources</span>
+            <span>📰 {{ feed_total }} entries</span>
+            <button class="refresh-btn" onclick="location.reload()">↻ Refresh</button>
+        </div>
+
+        <div class="composite-grid">
+            {% for item in composites[:12] %}
+            <div class="composite-card">
+                <div class="rank">#{{ loop.index }}</div>
+                <div class="model">{{ item.model[:25] }}</div>
+                <div class="score">{{ item.composite_score|round(1) }}</div>
+                <div class="sources">
+                    {% set total_sources = sources|length %}
+                    {% set has_sources = item.sources_available|default(0) %}
+                    <span class="dot on"></span>{{ has_sources }}/{{ total_sources }} sources
+                </div>
+            </div>
+            {% else %}
+            <div class="composite-card">
+                <div class="model">No data yet</div>
+                <div class="score">-</div>
+                <div class="sources">Run the fetcher first</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📊 Source Breakdown</h2>
+        <div class="tabs">
+            {% for source in sources %}
+            <button class="tab {% if loop.first %}active{% endif %}" onclick="showSource('{{ source.name }}', this)">
+                {{ source.name }}
+            </button>
+            {% endfor %}
+        </div>
+        <div id="source-content">
+            {% for source in sources %}
+            <div id="source-{{ source.name }}" style="{% if not loop.first %}display:none;{% endif %}">
+                {% set df = source_data[source.name] %}
+                {% if df is not none and not df.empty %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Model</th>
+                                <th>Score</th>
+                                <th>Min-Max</th>
+                                <th>Percentile</th>
+                                <th>Z-Score</th>
+                                <th>Combined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for _, row in df.iterrows() %}
+                            <tr>
+                                <td>{{ row.rank|int if row.rank else '-' }}</td>
+                                <td>{{ row.model[:40] }}</td>
+                                <td>{{ row.score|round(1) }}</td>
+                                <td>{{ row.norm_minmax|round(1) }}</td>
+                                <td>{{ row.norm_percentile|round(1) }}</td>
+                                <td>{{ row.norm_zscore|round(1) }}</td>
+                                <td><strong>{{ row.norm_combined|round(1) }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <p>No data for {{ source.name }} yet.</p>
+                    <p style="font-size:13px;">Run the fetcher to populate this table.</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📰 Feed <span class="count">({{ feed_drafts|length }} drafts waiting)</span></h2>
+        <div class="tabs">
+            <button class="tab active" onclick="showFeed('approved', this)">✅ Approved</button>
+            <button class="tab" onclick="showFeed('draft', this)">📝 Drafts ({{ feed_drafts|length }})</button>
+        </div>
+        <div id="feed-approved">
+            {% if feed_approved %}
+                {% for item in feed_approved[:20] %}
+                <div class="feed-item">
+                    <div class="headline">
+                        <span class="badge badge-{{ item.tier }}">{{ item.tier }}</span>
+                        <span class="badge badge-source">{{ item.source }}</span>
+                        {{ item.headline }}
+                    </div>
+                    {% if item.body %}
+                    <div class="body">{{ item.body }}</div>
+                    {% endif %}
+                    <div class="meta">{{ item.created_at[:16] }}</div>
+                </div>
+                {% endfor %}
+                {% if feed_approved|length > 20 %}
+                <p style="color:#888;text-align:center;padding:10px;">+ {{ feed_approved|length - 20 }} more entries</p>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="icon">✅</div>
+                    <p>No approved feed entries yet.</p>
+                    <p style="font-size:13px;">Review and approve drafts below.</p>
+                </div>
+            {% endif %}
+        </div>
+        <div id="feed-draft" style="display:none;">
+            {% if feed_drafts %}
+                {% for item in feed_drafts[:30] %}
+                <div class="feed-item">
+                    <div class="headline">
+                        <span class="badge badge-{{ item.tier }}">{{ item.tier }}</span>
+                        <span class="badge badge-source">{{ item.source }}</span>
+                        {{ item.headline }}
+                    </div>
+                    {% if item.body %}
+                    <div class="body">{{ item.body }}</div>
+                    {% endif %}
+                    <div class="meta">{{ item.created_at[:16] }}</div>
+                </div>
+                {% endfor %}
+                {% if feed_drafts|length > 30 %}
+                <p style="color:#888;text-align:center;padding:10px;">+ {{ feed_drafts|length - 30 }} more drafts</p>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="icon">📝</div>
+                    <p>No draft feed entries.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="footer">
+        Data updates hourly • Built with ❤️
+    </div>
+
+    <script>
+        function showSource(name, btn) {
+            document.querySelectorAll('[id^="source-"]').forEach(el => el.style.display = 'none');
+            document.getElementById('source-' + name).style.display = 'block';
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function showFeed(type, btn) {
+            document.getElementById('feed-approved').style.display = type === 'approved' ? 'block' : 'none';
+            document.getElementById('feed-draft').style.display = type === 'draft' ? 'block' : 'none';
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // Auto-refresh every 60 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 60000);
+    </script>
+
+</body>
+</html>
+"""
+
+# ============================================
+# ROUTES
+# ============================================
+
+@app.route('/')
+def index():
+    """Main page with all data"""
+    # Get composite scores
+    composites = get_composite_scores()
+    if composites.empty:
+        composites = pd.DataFrame({'model': ['No data'], 'composite_score': [0], 'sources_available': [0]})
+
+    # Get feed entries
+    conn = sqlite3.connect(DB_NAME)
+
+    try:
+        feed_approved = pd.read_sql_query("""
+            SELECT * FROM feed_entries
+            WHERE status = 'approved'
+            ORDER BY created_at DESC
+            LIMIT 50
+        """, conn)
+
+        feed_drafts = pd.read_sql_query("""
+            SELECT * FROM feed_entries
+            WHERE status = 'draft'
+            ORDER BY created_at DESC
+            LIMIT 50
+        """, conn)
+
+        feed_total = pd.read_sql_query("""
+            SELECT COUNT(*) as count FROM feed_entries
+        """, conn).iloc[0]['count']
+
+    except Exception as e:
+        print(f"⚠️ Error reading feed: {e}")
+        feed_approved = pd.DataFrame()
+        feed_drafts = pd.DataFrame()
+        feed_total = 0
+
+    # Get latest data for each source
+    source_data = {}
+    for source in SOURCES:
+        name = source['name']
+        try:
+            df = pd.read_sql_query(f"""
+                SELECT * FROM snapshots
+                WHERE source = '{name}'
+                ORDER BY snapshot_timestamp DESC
+                LIMIT 100
+            """, conn)
+
+            if not df.empty:
+                source_data[name] = df
+            else:
+                source_data[name] = pd.DataFrame()
+        except Exception as e:
+            print(f"⚠️ Error reading {name}: {e}")
+            source_data[name] = pd.DataFrame()
+
+    conn.close()
+
+    return render_template_string(
+        HTML_TEMPLATE,
+        composites=composites.head(12).to_dict('records'),
+        feed_approved=feed_approved.to_dict('records'),
+        feed_drafts=feed_drafts.to_dict('records'),
+        feed_total=feed_total,
+        sources=SOURCES,
+        source_data=source_data,
+        now=datetime.now().strftime('%Y-%m-%d %H:%M'),
+    )
+
+
+@app.route('/api/composite')
+def api_composite():
+    """JSON endpoint for composite scores"""
+    df = get_composite_scores()
+    return jsonify(df.head(20).to_dict('records'))
+
+
+@app.route('/api/source/<source_name>')
+def api_source(source_name):
+    """JSON endpoint for a specific source"""
+    df = get_latest_normalized(source_name)
+    return jsonify(df.head(20).to_dict('records'))
+
+
+@app.route('/api/feed')
+def api_feed():
+    """JSON endpoint for feed entries"""
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        df = pd.read_sql_query("""
+            SELECT * FROM feed_entries
+            ORDER BY created_at DESC
+            LIMIT 50
+        """, conn)
+        conn.close()
+        return jsonify(df.to_dict('records'))
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)})
+
+
+@app.route('/api/stats')
+def api_stats():
+    """JSON endpoint for system stats"""
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        # Count snapshots
+        snapshots_count = pd.read_sql_query("SELECT COUNT(*) as count FROM snapshots", conn).iloc[0]['count']
+
+        # Count models
+        models_count = pd.read_sql_query("""
+            SELECT COUNT(DISTINCT model) as count FROM snapshots
+        """, conn).iloc[0]['count']
+
+        # Count feed entries
+        feed_count = pd.read_sql_query("SELECT COUNT(*) as count FROM feed_entries", conn).iloc[0]['count']
+
+        # Last update
+        last_update = pd.read_sql_query("""
+            SELECT MAX(snapshot_timestamp) as last FROM snapshots
+        """, conn).iloc[0]['last']
+
+        conn.close()
+        return jsonify({
+            'snapshots': snapshots_count,
+            'models': models_count,
+            'feed_entries': feed_count,
+            'last_update': last_update,
+            'sources': len(SOURCES)
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)})
+
+
+# ============================================
+# RUN
+# ============================================
+
+if __name__ == '__main__':
+    print("=" * 60)
+    print("🚀 Starting Web Interface")
+    print("=" * 60)
+    print(f"📁 Database: {DB_NAME}")
+    print(f"📋 Sources: {len(SOURCES)}")
+    print(f"🌐 Visit: http://localhost:5000")
+    print("=" * 60)
+    app.run(debug=True, host='0.0.0.0', port=5000)
