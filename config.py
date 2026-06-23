@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import time
 import os
 import json
+import re
 
 # ============================================
 # DATABASE CONFIGURATION
@@ -420,8 +421,6 @@ def apply_all_normalizations(df, score_col='score'):
 
 # ============================================
 # THE ONE SOURCE LIST
-# Add new sources here and they'll be available
-# to ALL scripts that import this config
 # ============================================
 
 SOURCES = [
@@ -446,104 +445,6 @@ SOURCES = [
         "category": "coding",
         "parser_name": "parse_swebench_format"
     },
-    # ============================================
-    # LMArena Sub-Categories (already working)
-    # ============================================
-    # Uncomment these to add them:
-    # {
-    #     "name": "lmaena_code",
-    #     "url": "https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code",
-    #     "description": "LMArena Coding Leaderboard",
-    #     "category": "coding",
-    #     "parser_name": "parse_lmaena_format"
-    # },
-    # {
-    #     "name": "lmaena_vision",
-    #     "url": "https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=vision",
-    #     "description": "LMArena Vision Leaderboard",
-    #     "category": "vision",
-    #     "parser_name": "parse_lmaena_format"
-    # },
-    # {
-    #     "name": "lmaena_hard",
-    #     "url": "https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=hard",
-    #     "description": "LMArena Hard Prompts Leaderboard",
-    #     "category": "human_preference",
-    #     "parser_name": "parse_lmaena_format"
-    # },
-    # ============================================
-    # Future Sources (parsers placeholders above)
-    # ============================================
-    # {
-    #     "name": "gaia",
-    #     "url": None,
-    #     "description": "GAIA Leaderboard (Agentic/Tool-Use)",
-    #     "category": "agentic",
-    #     "parser_name": "parse_gaia_format"
-    # },
-    # {
-    #     "name": "gpqa_diamond",
-    #     "url": None,
-    #     "description": "GPQA Diamond Leaderboard (Reasoning/Knowledge)",
-    #     "category": "reasoning_knowledge",
-    #     "parser_name": "parse_gpqa_format"
-    # },
-    # {
-    #     "name": "humanitys_last_exam",
-    #     "url": None,
-    #     "description": "Humanity's Last Exam Leaderboard (Reasoning/Knowledge)",
-    #     "category": "reasoning_knowledge",
-    #     "parser_name": "parse_humanitys_last_exam_format"
-    # },
-    # {
-    #     "name": "aime_2025",
-    #     "url": None,
-    #     "description": "AIME 2025 Leaderboard (Reasoning/Knowledge)",
-    #     "category": "reasoning_knowledge",
-    #     "parser_name": "parse_aime_format"
-    # },
-    # {
-    #     "name": "livecodebench",
-    #     "url": None,
-    #     "description": "LiveCodeBench Leaderboard (Coding)",
-    #     "category": "coding",
-    #     "parser_name": "parse_livecodebench_format"
-    # },
-    # {
-    #     "name": "aider_polyglot",
-    #     "url": None,
-    #     "description": "Aider Polyglot Leaderboard (Coding)",
-    #     "category": "coding",
-    #     "parser_name": "parse_aider_polyglot_format"
-    # },
-    # {
-    #     "name": "terminal_bench",
-    #     "url": None,
-    #     "description": "Terminal-Bench Leaderboard (Coding)",
-    #     "category": "coding",
-    #     "parser_name": "parse_terminal_bench_format"
-    # },
-    # {
-    #     "name": "osworld",
-    #     "url": None,
-    #     "description": "OSWorld Leaderboard (Agentic/Tool-Use)",
-    #     "category": "agentic",
-    #     "parser_name": "parse_osworld_format"
-    # },
-    # {
-    #     "name": "webarena",
-    #     "url": None,
-    #     "description": "WebArena Leaderboard (Agentic/Tool-Use)",
-    #     "category": "agentic",
-    #     "parser_name": "parse_webarena_format"
-    # },
-    # {
-    #     "name": "tau2_bench",
-    #     "url": None,
-    #     "description": "Tau2-bench Leaderboard (Agentic/Tool-Use)",
-    #     "category": "agentic",
-    #     "parser_name": "parse_tau2_bench_format"
-    # },
 ]
 
 # ============================================
@@ -568,7 +469,77 @@ PARSER_MAP = {
 }
 
 # ============================================
-# DATABASE UTILITIES (UPDATED - Option 1)
+# MODEL NAME NORMALIZATION
+# ============================================
+
+def normalize_model_name(name):
+    """
+    Normalize model names across different sources.
+    This is the critical function for matching the same model across different leaderboards.
+    """
+    if not name or not isinstance(name, str):
+        return name
+    
+    # Convert to lowercase
+    name = name.lower().strip()
+    
+    # Remove common prefixes/suffixes
+    name = name.replace(' (', '(')
+    name = name.replace(')', '')
+    
+    # Remove date suffixes (e.g., -2024-11-20, -20241022, etc.)
+    name = re.sub(r'[-_](20\d{2}[-_]?(0[1-9]|1[0-2])[-_]?(0[1-9]|[12][0-9]|3[01]))', '', name)
+    name = re.sub(r'[-_]20\d{6}', '', name)  # YYYYMMDD format
+    name = re.sub(r'[-_]20\d{4}', '', name)  # YYYYMM format
+    
+    # Remove "instruct", "chat", "preview", "thinking", "reasoning", etc.
+    name = re.sub(r'-(instruct|chat|preview|thinking|reasoning|flash-lite|ultra|pro|max|mini|small|large)', '', name)
+    name = re.sub(r'-(v|version)[0-9\.]+', '', name)
+    
+    # Remove common separators
+    name = re.sub(r'[-_/]', ' ', name)
+    
+    # Remove " (max)" and similar suffixes
+    name = re.sub(r'\s*\([^)]*\)', '', name)
+    
+    # Common model name mappings
+    mappings = {
+        'gpt-4o': ['gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-2024-08-06', 'gpt-4o-2024-11-20'],
+        'gpt-4-turbo': ['gpt-4-turbo', 'gpt-4-turbo-2024-04-09'],
+        'gpt-4.5': ['gpt-4.5', 'gpt-4.5-preview'],
+        'gpt-5': ['gpt-5', 'gpt-5 high'],
+        'claude-3.5-sonnet': ['claude-3.5-sonnet', 'claude-3-5-sonnet', 'claude-3.5-sonnet-20241022', 'claude-3.5-sonnet-20240620'],
+        'claude-3-opus': ['claude-3-opus', 'claude-3-opus-20240229'],
+        'claude-3-haiku': ['claude-3-haiku', 'claude-3-haiku-20240307'],
+        'gemini-1.5-pro': ['gemini-1.5-pro', 'gemini-1.5-pro-002'],
+        'gemini-1.5-flash': ['gemini-1.5-flash', 'gemini-1.5-flash-002'],
+        'gemini-2.0-flash': ['gemini-2.0-flash', 'gemini-2.0-flash-exp', 'gemini-2.0-flash-lite'],
+        'gemini-2.5-pro': ['gemini-2.5-pro', 'gemini-2.5-pro-exp-03-25'],
+        'deepseek-v3': ['deepseek-v3', 'deepseek-v3-0324'],
+        'deepseek-r1': ['deepseek-r1', 'deepseek-r1-0528'],
+        'qwen2.5': ['qwen2.5', 'qwen-2.5'],
+        'qwen3': ['qwen3', 'qwen-3'],
+        'llama-3.1': ['llama-3.1', 'llama-3.1-8b', 'llama-3.1-70b', 'llama-3.1-405b'],
+        'llama-3': ['llama-3', 'llama-3-8b', 'llama-3-70b'],
+        'mistral-large': ['mistral-large', 'mistral-large-2407', 'mistral-large-2411'],
+        'mixtral': ['mixtral-8x7b', 'mixtral-8x22b'],
+    }
+    
+    # Check if the name matches any of our mappings
+    for canonical, variants in mappings.items():
+        for variant in variants:
+            if variant in name or name in variant:
+                return canonical
+    
+    # Remove everything after the first common separator for generic cleanup
+    for sep in [' ', '/', ':']:
+        if sep in name and len(name.split(sep)[0]) > 2:
+            return name.split(sep)[0]
+    
+    return name
+
+# ============================================
+# DATABASE UTILITIES
 # ============================================
 
 def get_connection():
@@ -576,22 +547,42 @@ def get_connection():
     return sqlite3.connect(DB_NAME)
 
 def get_previous_snapshot(source_name):
-    """Get the most recent snapshot for a source"""
+    """
+    Get the most recent FULL snapshot for a source.
+    Returns ALL models from the most recent timestamp.
+    FIXED: Now returns all rows, not just one.
+    """
     conn = get_connection()
     try:
-        df = pd.read_sql_query(
-            f"SELECT * FROM {SNAPSHOTS_TABLE} WHERE source = '{source_name}' ORDER BY snapshot_timestamp DESC LIMIT 1",
-            conn
-        )
+        # Use parameterized query to prevent SQL injection
+        cursor = conn.cursor()
+        
+        # First, get the most recent timestamp
+        timestamp_query = f"""
+            SELECT MAX(snapshot_timestamp) as latest_ts
+            FROM {SNAPSHOTS_TABLE}
+            WHERE source = ?
+        """
+        cursor.execute(timestamp_query, (source_name,))
+        result = cursor.fetchone()
+        
+        if result is None or result[0] is None:
+            conn.close()
+            return None
+        
+        latest_ts = result[0]
+        
+        # Then, get ALL rows for that timestamp
+        query = f"""
+            SELECT * FROM {SNAPSHOTS_TABLE}
+            WHERE source = ? AND snapshot_timestamp = ?
+        """
+        df = pd.read_sql_query(query, conn, params=(source_name, latest_ts))
         conn.close()
         return df if not df.empty else None
     except Exception as e:
         conn.close()
         return None
-
-# ============================================
-# CHANGED: save_snapshot() now includes normalization
-# ============================================
 
 def save_snapshot(source_name, df):
     """
@@ -602,7 +593,7 @@ def save_snapshot(source_name, df):
     conn = get_connection()
     df_copy = df.copy()
     
-    # ← NEW: Apply normalizations before saving
+    # Apply normalizations before saving
     df_copy = apply_all_normalizations(df_copy, 'score')
     
     # Add metadata
@@ -614,10 +605,6 @@ def save_snapshot(source_name, df):
     conn.close()
     print(f"  💾 Saved snapshot to {SNAPSHOTS_TABLE} (raw + normalized)")
 
-# ============================================
-# NEW: get_latest_normalized() - Easy access to normalized data
-# ============================================
-
 def get_latest_normalized(source_name=None, limit=100):
     """
     Get the most recent normalized scores for a source.
@@ -626,15 +613,17 @@ def get_latest_normalized(source_name=None, limit=100):
     conn = get_connection()
     
     if source_name:
+        # Use parameterized query
         query = f"""
             SELECT source, model, score, rank, 
                    norm_minmax, norm_percentile, norm_zscore, norm_combined,
                    snapshot_timestamp
             FROM {SNAPSHOTS_TABLE} 
-            WHERE source = '{source_name}'
+            WHERE source = ?
             ORDER BY snapshot_timestamp DESC 
-            LIMIT {limit}
+            LIMIT ?
         """
+        df = pd.read_sql_query(query, conn, params=(source_name, limit))
     else:
         query = f"""
             SELECT source, model, score, rank, 
@@ -642,25 +631,20 @@ def get_latest_normalized(source_name=None, limit=100):
                    snapshot_timestamp
             FROM {SNAPSHOTS_TABLE} 
             ORDER BY snapshot_timestamp DESC 
-            LIMIT {limit}
+            LIMIT ?
         """
+        df = pd.read_sql_query(query, conn, params=(limit,))
     
-    df = pd.read_sql_query(query, conn)
     conn.close()
     return df
-
-# ============================================
-# NEW: get_composite_scores() - Calculate composite across sources
-# ============================================
 
 def get_composite_scores(weights=None):
     """
     Calculate composite scores across all sources.
-    weights: dict like {'lmaena_text': 0.4, 'mmlu_pro': 0.3, 'swe_bench': 0.3}
-    If None, uses equal weights.
+    Uses model name normalization to match models across different leaderboards.
+    FIXED: Now uses normalized_model for matching.
     """
     if weights is None:
-        # Default: equal weights for all active sources
         active_sources = [s['name'] for s in SOURCES]
         equal_weight = 1.0 / len(active_sources)
         weights = {source: equal_weight for source in active_sources}
@@ -670,17 +654,34 @@ def get_composite_scores(weights=None):
     # Get latest snapshot for each source
     all_scores = {}
     for source in weights.keys():
+        # Use parameterized query to get most recent timestamp
+        cursor = conn.cursor()
+        timestamp_query = f"""
+            SELECT MAX(snapshot_timestamp) as latest_ts
+            FROM {SNAPSHOTS_TABLE}
+            WHERE source = ?
+        """
+        cursor.execute(timestamp_query, (source,))
+        result = cursor.fetchone()
+        
+        if result is None or result[0] is None:
+            continue
+            
+        latest_ts = result[0]
+        
         df = pd.read_sql_query(
             f"""
             SELECT model, norm_combined as score
             FROM {SNAPSHOTS_TABLE}
-            WHERE source = '{source}'
-            ORDER BY snapshot_timestamp DESC
-            LIMIT 100
+            WHERE source = ? AND snapshot_timestamp = ?
             """,
-            conn
+            conn,
+            params=(source, latest_ts)
         )
+        
         if not df.empty:
+            # Apply model name normalization
+            df['normalized_model'] = df['model'].apply(normalize_model_name)
             all_scores[source] = df
     
     conn.close()
@@ -688,37 +689,37 @@ def get_composite_scores(weights=None):
     if not all_scores:
         return pd.DataFrame()
     
-    # Get all unique models
+    # Get all unique normalized model names
     all_models = set()
     for df in all_scores.values():
-        all_models.update(df['model'].tolist())
+        all_models.update(df['normalized_model'].tolist())
     
     composites = []
     for model in all_models:
         total = 0
         weight_sum = 0
         sources_found = []
+        raw_names = []
         
         for source, df in all_scores.items():
-            score_row = df[df['model'] == model]
+            # Match by normalized model name
+            score_row = df[df['normalized_model'] == model]
             if not score_row.empty:
                 total += score_row.iloc[0]['score'] * weights[source]
                 weight_sum += weights[source]
                 sources_found.append(source)
+                raw_names.append(f"{source}: {score_row.iloc[0]['model']}")
         
         if weight_sum > 0:
             composites.append({
                 'model': model,
                 'composite_score': total / weight_sum,
                 'sources_available': len(sources_found),
-                'sources_list': ', '.join(sources_found)
+                'sources_list': ', '.join(sources_found),
+                'raw_names': ' | '.join(raw_names)
             })
     
     return pd.DataFrame(composites).sort_values('composite_score', ascending=False)
-
-# ============================================
-# EXISTING FUNCTIONS (unchanged)
-# ============================================
 
 def save_feed_entries(changes):
     """Save feed entries to database"""
@@ -772,7 +773,7 @@ def init_database():
     conn = get_connection()
     cursor = conn.cursor()
     
-    # Snapshots table (now with normalized columns)
+    # Snapshots table (with normalized columns)
     cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS {SNAPSHOTS_TABLE} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -839,25 +840,56 @@ def init_database():
     print("✅ Database initialized with all tables")
 
 # ============================================
-# CHANGE DETECTION (unchanged)
+# CHANGE DETECTION
 # ============================================
 
 def detect_changes(current_df, previous_df, source_name):
     """
     Detect changes between two snapshots.
     Returns list of changes.
+    FIXED: Now properly cleans DataFrames before comparison.
     """
     if previous_df is None or previous_df.empty:
-        # First run - no changes to detect
         return []
     
+    # Make copies to avoid modifying originals
+    current = current_df.copy()
+    previous = previous_df.copy()
+    
+    # Keep ONLY the columns we need for comparison
+    keep_cols = ['model', 'score', 'rank']
+    
+    # Only keep columns that exist
+    current_cols = [c for c in keep_cols if c in current.columns]
+    previous_cols = [c for c in keep_cols if c in previous.columns]
+    
+    current = current[current_cols].copy()
+    previous = previous[previous_cols].copy()
+    
+    # Ensure rank column exists (add if missing)
+    if 'rank' not in current.columns:
+        current['rank'] = range(1, len(current) + 1)
+    if 'rank' not in previous.columns:
+        previous['rank'] = range(1, len(previous) + 1)
+    
+    # Drop any rows with missing values
+    current = current.dropna(subset=['model', 'score'])
+    previous = previous.dropna(subset=['model', 'score'])
+    
+    # Ensure score is numeric
+    current['score'] = pd.to_numeric(current['score'], errors='coerce')
+    previous['score'] = pd.to_numeric(previous['score'], errors='coerce')
+    
+    # Drop rows where score conversion failed
+    current = current.dropna(subset=['score'])
+    previous = previous.dropna(subset=['score'])
+    
+    # Now do the actual detection
     changes = []
+    current_models = set(current['model'])
+    previous_models = set(previous['model'])
     
-    # Create dictionaries for easy lookup
-    current_models = set(current_df['model'])
-    previous_models = set(previous_df['model'])
-    
-    # 1. Check for new models
+    # 1. New models
     new_models = current_models - previous_models
     for model in new_models:
         changes.append({
@@ -869,64 +901,37 @@ def detect_changes(current_df, previous_df, source_name):
             'body': f"{model} has been added to the {source_name} leaderboard."
         })
     
-    # 2. Check for rank changes (if rank column exists)
-    if 'rank' in current_df.columns and 'rank' in previous_df.columns:
-        current_rank = dict(zip(current_df['model'], current_df['rank']))
-        previous_rank = dict(zip(previous_df['model'], previous_df['rank']))
+    # 2. Rank changes
+    if 'rank' in current.columns and 'rank' in previous.columns:
+        current_rank = dict(zip(current['model'], current['rank']))
+        previous_rank = dict(zip(previous['model'], previous['rank']))
         
         for model in current_models.intersection(previous_models):
-            rank_change = previous_rank.get(model, 0) - current_rank.get(model, 0)
-            if rank_change != 0:
-                tier = 'big' if abs(rank_change) >= RANK_CHANGE_BIG else 'moderate'
-                direction = "up" if rank_change > 0 else "down"
-                changes.append({
-                    'type': 'rank_change',
-                    'model': model,
-                    'source': source_name,
-                    'tier': tier,
-                    'change': rank_change,
-                    'old_rank': previous_rank.get(model),
-                    'new_rank': current_rank.get(model),
-                    'headline': f"{model} moves {direction} {abs(rank_change)} spots on {source_name}",
-                    'body': f"{model} moved from #{previous_rank.get(model)} to #{current_rank.get(model)} on the {source_name} leaderboard."
-                })
+            if model in current_rank and model in previous_rank:
+                rank_change = previous_rank.get(model, 0) - current_rank.get(model, 0)
+                if rank_change != 0:
+                    tier = 'big' if abs(rank_change) >= RANK_CHANGE_BIG else 'moderate'
+                    direction = "up" if rank_change > 0 else "down"
+                    changes.append({
+                        'type': 'rank_change',
+                        'model': model,
+                        'source': source_name,
+                        'tier': tier,
+                        'change': rank_change,
+                        'old_rank': previous_rank.get(model),
+                        'new_rank': current_rank.get(model),
+                        'headline': f"{model} moves {direction} {abs(rank_change)} spots on {source_name}",
+                        'body': f"{model} moved from #{previous_rank.get(model)} to #{current_rank.get(model)} on the {source_name} leaderboard."
+                    })
     
-    # 3. Check for score shifts (small tier)
-    current_score = dict(zip(current_df['model'], current_df['score']))
-    previous_score = dict(zip(previous_df['model'], previous_df['score']))
+    # 3. Score shifts
+    current_score = dict(zip(current['model'], current['score']))
+    previous_score = dict(zip(previous['model'], previous['score']))
     
     for model in current_models.intersection(previous_models):
-        score_shift = current_score.get(model, 0) - previous_score.get(model, 0)
-        # If it's a significant shift but no rank change (or we already have a rank change)
-        if abs(score_shift) > SCORE_SHIFT_THRESHOLD:
-            # Check if we already have a rank change for this model
-            has_rank_change = any(c['model'] == model and c['type'] == 'rank_change' for c in changes)
-            if not has_rank_change:
-                direction = "up" if score_shift > 0 else "down"
-                changes.append({
-                    'type': 'score_shift',
-                    'model': model,
-                    'source': source_name,
-                    'tier': 'small',
-                    'change': score_shift,
-                    'old_score': previous_score.get(model),
-                    'new_score': current_score.get(model),
-                    'headline': f"{model} score changes by {abs(score_shift):.1f} points on {source_name}",
-                    'body': f"{model}'s score on {source_name} shifted from {previous_score.get(model, 0):.1f} to {current_score.get(model, 0):.1f}."
-                })
-    
-    return changes
-
-# ============================================
-# PRINT SUMMARY
-# ============================================
-
-print("=" * 60)
-print("📋 CONFIG LOADED")
-print("=" * 60)
-print(f"   Database: {DB_NAME}")
-print(f"   Sources: {len(SOURCES)} configured")
-print(f"   Parsers: {len(PARSER_MAP)} available")
-print(f"   Tables: {SNAPSHOTS_TABLE}, {FEED_TABLE}, {CHANGELOG_TABLE}, {COMPOSITE_TABLE}")
-print("   ✅ Normalization enabled on snapshots (Option 1)")
-print("=" * 60)
+        if model in current_score and model in previous_score:
+            score_shift = current_score.get(model, 0) - previous_score.get(model, 0)
+            if abs(score_shift) > SCORE_SHIFT_THRESHOLD:
+                has_rank_change = any(c['model'] == model and c['type'] == 'rank_change' for c in changes)
+                if not has_rank_change:
+                    direction = "up" if score_shift > 0 else "down"
