@@ -10,8 +10,10 @@ import numpy as np
 from datetime import datetime
 import os
 from config import DB_NAME, SOURCES, get_composite_scores, approve_feed_entry
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 def convert_pandas_types(obj):
     if isinstance(obj, dict):
@@ -409,6 +411,78 @@ def api_reject(entry_id):
     conn.commit()
     conn.close()
     return jsonify({'status': 'rejected'})
+
+# ============================================
+@app.route('/api/models')
+def api_models():
+    """Get all models with composite scores"""
+    composites = get_composite_scores()
+    if composites.empty:
+        return jsonify([])
+
+    df = composites.sort_values('composite_score', ascending=False)
+    data = df[['model', 'composite_score', 'sources_available']].copy().reset_index(drop=True).to_dict('records')
+    for i, item in enumerate(data):
+        item['rank'] = i + 1
+
+    return jsonify(convert_pandas_types(data))
+
+@app.route('/api/feed')
+def api_feed():
+    """Get feed entries"""
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        df = pd.read_sql_query("""
+            SELECT * FROM feed_entries 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        """, conn)
+        conn.close()
+        return jsonify(convert_pandas_types(df.to_dict('records')))
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)})
+
+@app.route('/api/sources')
+def api_sources():
+    """Get source configuration"""
+    source_count = len(SOURCES)
+    if source_count == 0:
+        return jsonify([])
+
+    base_weight = round(100.0 / source_count)
+    weights = [base_weight] * source_count
+    weights[-1] = 100 - sum(weights[:-1])
+
+    response = []
+    for source, weight in zip(SOURCES, weights):
+        name = source.get('name', '')
+        label = source.get('label') or name.replace('_', ' ').replace('-', ' ').title()
+        item = dict(source)
+        item['weight'] = int(weight)
+        item['label'] = label
+        response.append(item)
+
+    return jsonify(convert_pandas_types(response))
+
+@app.route('/api/stats')
+def api_stats():
+    """Get system stats"""
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        models_count = pd.read_sql_query("SELECT COUNT(DISTINCT model) as count FROM snapshots", conn).iloc[0]['count']
+        feed_count = pd.read_sql_query("SELECT COUNT(*) as count FROM feed_entries", conn).iloc[0]['count']
+        last_update = pd.read_sql_query("SELECT MAX(snapshot_timestamp) as last FROM snapshots", conn).iloc[0]['last']
+        conn.close()
+        return jsonify({
+            'models': int(models_count),
+            'feed_entries': int(feed_count),
+            'sources': len(SOURCES),
+            'last_update': last_update
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)})
 
 # ============================================
 # RUN

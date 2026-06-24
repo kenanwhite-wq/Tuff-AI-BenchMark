@@ -6,7 +6,7 @@ Runs the hourly fetcher automatically.
 import time
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 FETCHER_SCRIPT = "hourlyfetcher.py"
@@ -63,11 +63,8 @@ def main():
     while True:
         # Calculate seconds until the next hour
         now = datetime.now()
-        next_hour = now.replace(minute=0, second=0, microsecond=0)
-        if now.minute >= 0:
-            next_hour = next_hour.replace(hour=now.hour + 1)
-        
-        seconds_to_wait = (next_hour - now).total_seconds()
+        next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        seconds_to_wait = max((next_hour - now).total_seconds(), 0)
         
         print(f"⏳ Next run at {next_hour.strftime('%H:%M:%S')} ({seconds_to_wait:.0f} seconds from now)")
         
