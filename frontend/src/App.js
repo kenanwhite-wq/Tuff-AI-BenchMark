@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import ModelPage from './ModelPage';
 
 const API = axios.create({
   baseURL: 'http://localhost:5001/api',
   timeout: 5000,
 });
 
-function App() {
+function Home() {
+  const navigate = useNavigate();
   const [models, setModels] = useState([]);
   const [feed, setFeed] = useState([]);
   const [sources, setSources] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [priceToggle, setPriceToggle] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredModels = searchQuery.trim().length > 0
+    ? models.filter(m => m.model.toLowerCase().includes(searchQuery.toLowerCase()))
+    : models;
 
   useEffect(() => {
     Promise.all([
@@ -109,6 +117,7 @@ function App() {
           alignItems: 'baseline',
           gap: 12,
           marginBottom: 16,
+          flexWrap: 'wrap'
         }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>
             Today's Rankings
@@ -137,6 +146,35 @@ function App() {
           </div>
         </div>
 
+        <div style={{ marginTop: 10, marginBottom: 18, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search models..."
+            style={{
+              flex: 1,
+              minWidth: 240,
+              borderRadius: 12,
+              border: '1px solid #d4d4d8',
+              padding: '12px 14px',
+              fontSize: 14,
+              outline: 'none'
+            }}
+          />
+          {searchQuery ? (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                border: 'none', background: '#e5e7eb', color: '#374151', padding: '10px 14px', borderRadius: 12,
+                cursor: 'pointer', fontWeight: 600
+              }}
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
+
         {/* Model cards */}
         <div style={{
           display: 'flex',
@@ -145,7 +183,11 @@ function App() {
           paddingBottom: 16,
           scrollbarWidth: 'none',
         }}>
-          {models.map((m, i) => (
+          {filteredModels.length === 0 ? (
+            <div style={{ color: '#71717a', fontSize: 13, padding: '18px 0' }}>
+              No models match “{searchQuery}”.
+            </div>
+          ) : filteredModels.map((m, i) => (
             <div key={m.model} style={{
               minWidth: 130,
               background: i === 0 ? '#4f46e5' : '#f7f6ff',
@@ -154,10 +196,11 @@ function App() {
               padding: '12px 14px',
               flexShrink: 0,
               transition: 'transform 0.15s',
-              cursor: 'default',
+              cursor: 'pointer',
             }}
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              onClick={() => navigate(`/model/${encodeURIComponent(m.model)}`)}
             >
               <div style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: '1px',
@@ -312,7 +355,6 @@ function App() {
 
         {/* Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Sources breakdown */}
           <div style={{
             background: 'white', borderRadius: 10,
             border: '1px solid #e5e7fb', padding: '18px 18px'
@@ -329,13 +371,8 @@ function App() {
                   <span>{s.label || s.name}</span>
                   <span style={{ color: '#71717a' }}>{s.weight || '—'}%</span>
                 </div>
-                <div style={{
-                  fontSize: 11, color: '#a1a1aa', marginBottom: 5
-                }}>{s.category || '—'}</div>
-                <div style={{
-                  height: 4, borderRadius: 2,
-                  background: '#f4f4f5', overflow: 'hidden'
-                }}>
+                <div style={{ fontSize: 11, color: '#a1a1aa', marginBottom: 5 }}>{s.category || '—'}</div>
+                <div style={{ height: 4, borderRadius: 2, background: '#f4f4f5', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${s.weight || 33}%`,
                     background: sourceColors[i % sourceColors.length],
@@ -344,13 +381,11 @@ function App() {
                 </div>
               </div>
             ))}
-            <a href="#" style={{
-              fontSize: 11, color: '#4f46e5', textDecoration: 'none',
-              display: 'block', marginTop: 8
-            }}>View full methodology →</a>
+            <a href="#" style={{ fontSize: 11, color: '#4f46e5', textDecoration: 'none', display: 'block', marginTop: 8 }}>
+              View full methodology →
+            </a>
           </div>
 
-          {/* Community voting */}
           <div style={{
             background: 'white', borderRadius: 10,
             border: '1px solid #e5e7fb', padding: '18px 18px'
@@ -366,16 +401,13 @@ function App() {
               textAlign: 'center', border: '1px dashed #c7d2fe'
             }}>
               <div style={{ fontSize: 22, marginBottom: 6 }}>🗳️</div>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-                Which is better?
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Which is better?</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {models.slice(0, 2).map(m => (
                   <button key={m.model} style={{
                     flex: 1, padding: '8px', borderRadius: 6,
                     border: '1px solid #c7d2fe', background: 'white',
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    color: '#4f46e5'
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', color: '#4f46e5'
                   }}>
                     {m.model}
                   </button>
@@ -384,10 +416,7 @@ function App() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div style={{
-            background: '#4f46e5', borderRadius: 10, padding: '18px 18px', color: 'white'
-          }}>
+          <div style={{ background: '#4f46e5', borderRadius: 10, padding: '18px 18px', color: 'white' }}>
             <h3 style={{ fontSize: 13, fontWeight: 800, marginBottom: 14, letterSpacing: '0.5px', opacity: 0.7, textTransform: 'uppercase' }}>
               This Week
             </h3>
@@ -397,10 +426,7 @@ function App() {
               ['Sources live', `${sources.length}/3`],
               ['Feed entries', stats.feed_entries || '0'],
             ].map(([label, val]) => (
-              <div key={label} style={{
-                display: 'flex', justifyContent: 'space-between',
-                marginBottom: 10, fontSize: 13
-              }}>
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 13 }}>
                 <span style={{ opacity: 0.75 }}>{label}</span>
                 <strong>{val}</strong>
               </div>
@@ -409,14 +435,20 @@ function App() {
         </div>
       </div>
 
-      <div style={{
-        textAlign: 'center', padding: '16px 24px 32px',
-        fontSize: 12, color: '#a1a1aa'
-      }}>
+      <div style={{ textAlign: 'center', padding: '16px 24px 32px', fontSize: 12, color: '#a1a1aa' }}>
         Data updates hourly · Methodology is public · Not affiliated with any lab
       </div>
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/model/:modelName" element={<ModelPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

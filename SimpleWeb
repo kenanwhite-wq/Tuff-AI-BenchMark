@@ -4,12 +4,13 @@ Reliable data display + feed approval
 """
 
 from flask import Flask, render_template_string, jsonify
+from urllib.parse import unquote
 import sqlite3
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import os
-from config import DB_NAME, SOURCES, get_composite_scores, approve_feed_entry
+from config import DB_NAME, SOURCES, get_composite_scores, approve_feed_entry, normalize_model_name, COMPOSITE_TABLE
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -131,40 +132,19 @@ HTML = """
         .feed-item .body { font-size: 14px; color: #555; margin-top: 4px; }
         .feed-item .meta { font-size: 12px; color: #888; margin-top: 4px; }
         .feed-item .actions { margin-top: 8px; display: flex; gap: 8px; }
-        .btn {
-            padding: 4px 14px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-        }
+        .btn { padding: 4px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-approve { background: #22c55e; color: white; }
         .btn-approve:hover { background: #16a34a; }
         .btn-reject { background: #ef4444; color: white; }
         .btn-reject:hover { background: #dc2626; }
-        .badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-right: 6px;
-        }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-right: 6px; }
         .badge-big { background: #fecaca; color: #991b1b; }
         .badge-moderate { background: #fde68a; color: #92400e; }
         .badge-small { background: #bbf7d0; color: #166534; }
         .badge-source { background: #e5e7eb; color: #374151; font-weight: 400; }
         .empty-state { color: #888; text-align: center; padding: 30px; }
         .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
-        .refresh-btn {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
+        .refresh-btn { background: #2563eb; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
         .refresh-btn:hover { background: #1d4ed8; }
         .footer { text-align: center; color: #888; font-size: 12px; padding: 20px; }
         @media (max-width: 700px) {
@@ -308,14 +288,12 @@ function showTab(name) {
         if (el.textContent.trim() === name) el.classList.add('active');
     });
 }
-
 function showFeed(type) {
     document.getElementById('feed-approved').style.display = type === 'approved' ? 'block' : 'none';
     document.getElementById('feed-draft').style.display = type === 'draft' ? 'block' : 'none';
     document.querySelectorAll('.tabs .tab').forEach(el => el.classList.remove('active'));
     event.target.classList.add('active');
 }
-
 function approveEntry(id) {
     if (confirm('Approve this entry?')) {
         fetch('/api/approve/' + id, {method: 'POST'})
@@ -377,6 +355,7 @@ def index():
         now=datetime.now().strftime('%Y-%m-%d %H:%M'),
     )
 
+
 @app.route('/debug')
 def debug():
     conn = sqlite3.connect(DB_NAME)
@@ -396,6 +375,7 @@ def debug():
     conn.close()
     return jsonify(results)
 
+
 @app.route('/api/approve/<int:entry_id>', methods=['POST'])
 def api_approve(entry_id):
     try:
@@ -403,6 +383,7 @@ def api_approve(entry_id):
         return jsonify({'status': 'approved'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/reject/<int:entry_id>', methods=['POST'])
 def api_reject(entry_id):
@@ -412,48 +393,183 @@ def api_reject(entry_id):
     conn.close()
     return jsonify({'status': 'rejected'})
 
-# ============================================
+
 @app.route('/api/models')
 def api_models():
-    """Get all models with composite scores"""
     composites = get_composite_scores()
     if composites.empty:
         return jsonify([])
-
     df = composites.sort_values('composite_score', ascending=False)
     data = df[['model', 'composite_score', 'sources_available']].copy().reset_index(drop=True).to_dict('records')
     for i, item in enumerate(data):
         item['rank'] = i + 1
-
     return jsonify(convert_pandas_types(data))
+
+
+@app.route('/api/model/<path:model_name>')
+def api_model(model_name):
+    decoded_name = unquote(model_name)
+    norm_name = normalize_model_name(decoded_name)
+
+    conn = sqlite3.connect(DB_NAME)
+
+    # overall composite and rank
+    composite_score = None
+    rank = None
+    sources_available = 0
+    try:
+        comps = get_composite_scores()
+        if not comps.empty:
+            comps = comps.reset_index(drop=True)
+            comps['rank'] = range(1, len(comps) + 1)
+
+            # try normalized name first, then decoded, then case-insensitive
+            match = comps[comps['model'].str.lower() == norm_name.lower()]
+            if match.empty:
+                match = comps[comps['model'].str.lower() == decoded_name.lower()]
+
+            if not match.empty:
+                composite_score = float(match.iloc[0]['composite_score'])
+                rank = int(match.iloc[0]['rank'])
+                sources_available = int(match.iloc[0].get('sources_available', 0) or 0)
+    except Exception as e:
+        print('Error computing composite:', e)
+
+    # per-source scores
+    source_scores = []
+    for src in SOURCES:
+        name = src.get('name')
+        category = src.get('category')
+        try:
+            df = get_latest_snapshot_for_source(name, conn, limit=200)
+        except Exception:
+            df = None
+
+        if df is None or df.empty:
+            source_scores.append({
+                'source_name': name,
+                'category': category,
+                'raw_score': None,
+                'rank': None,
+                'total_in_source': 0,
+                'normalized_score': None,
+                'has_data': False
+            })
+            continue
+
+        try:
+            df['normalized_model'] = df['model'].apply(normalize_model_name)
+        except Exception:
+            df['normalized_model'] = df['model']
+
+        total = len(df)
+
+        # try normalized name first, then decoded, then case-insensitive
+        row = df[df['normalized_model'].str.lower() == norm_name.lower()]
+        if row.empty:
+            row = df[df['normalized_model'].str.lower() == decoded_name.lower()]
+        if row.empty:
+            row = df[df['model'].str.lower() == decoded_name.lower()]
+
+        if row.empty:
+            source_scores.append({
+                'source_name': name,
+                'category': category,
+                'raw_score': None,
+                'rank': None,
+                'total_in_source': total,
+                'normalized_score': None,
+                'has_data': False
+            })
+        else:
+            r = row.iloc[0]
+            source_scores.append({
+                'source_name': name,
+                'category': category,
+                'raw_score': r.get('score'),
+                'rank': int(r.get('rank')) if r.get('rank') is not None else None,
+                'total_in_source': int(total),
+                'normalized_score': float(r.get('norm_combined')) if r.get('norm_combined') is not None else None,
+                'has_data': True
+            })
+
+    # category composite scores
+    category_scores = {}
+    mapping = {
+        'reasoning': ['reasoning_knowledge'],
+        'coding': ['coding'],
+        'human_preference': ['human_preference'],
+        'agentic': ['agentic', 'tool_use', 'agentic_tool_use']
+    }
+    for key, cats in mapping.items():
+        vals = [s['normalized_score'] for s in source_scores if s['category'] in cats and s['normalized_score'] is not None]
+        category_scores[key] = sum(vals) / len(vals) if vals else None
+
+    # history
+    history = []
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            f"SELECT composite_score, updated_at FROM {COMPOSITE_TABLE} WHERE model = ? ORDER BY updated_at DESC LIMIT 30",
+            (norm_name,)
+        )
+        for r in cur.fetchall():
+            history.append({'timestamp': r[1], 'composite_score': r[0]})
+    except Exception:
+        history = []
+
+    # feed entries
+    feed_entries = []
+    try:
+        df_feed = pd.read_sql_query("SELECT * FROM feed_entries ORDER BY created_at DESC LIMIT 200", conn)
+        if not df_feed.empty:
+            df_feed['normalized_model'] = df_feed['model'].apply(normalize_model_name)
+            matched = df_feed[
+                (df_feed['normalized_model'].str.lower() == norm_name.lower()) |
+                (df_feed['normalized_model'].str.lower() == decoded_name.lower())
+            ]
+            feed_entries = matched.to_dict('records')
+    except Exception:
+        feed_entries = []
+
+    conn.close()
+
+    if composite_score is None and not any(s['has_data'] for s in source_scores):
+        return jsonify({'error': 'Model not found'}), 404
+
+    return jsonify(convert_pandas_types({
+        'model': decoded_name,
+        'composite_score': composite_score,
+        'rank': rank,
+        'sources_available': sources_available,
+        'category_scores': category_scores,
+        'source_scores': source_scores,
+        'history': history,
+        'feed_entries': feed_entries,
+        'last_updated': datetime.now().isoformat()
+    }))
+
 
 @app.route('/api/feed')
 def api_feed():
-    """Get feed entries"""
     conn = sqlite3.connect(DB_NAME)
     try:
-        df = pd.read_sql_query("""
-            SELECT * FROM feed_entries 
-            ORDER BY created_at DESC 
-            LIMIT 50
-        """, conn)
+        df = pd.read_sql_query("SELECT * FROM feed_entries ORDER BY created_at DESC LIMIT 50", conn)
         conn.close()
         return jsonify(convert_pandas_types(df.to_dict('records')))
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)})
 
+
 @app.route('/api/sources')
 def api_sources():
-    """Get source configuration"""
     source_count = len(SOURCES)
     if source_count == 0:
         return jsonify([])
-
     base_weight = round(100.0 / source_count)
     weights = [base_weight] * source_count
     weights[-1] = 100 - sum(weights[:-1])
-
     response = []
     for source, weight in zip(SOURCES, weights):
         name = source.get('name', '')
@@ -462,12 +578,11 @@ def api_sources():
         item['weight'] = int(weight)
         item['label'] = label
         response.append(item)
-
     return jsonify(convert_pandas_types(response))
+
 
 @app.route('/api/stats')
 def api_stats():
-    """Get system stats"""
     conn = sqlite3.connect(DB_NAME)
     try:
         models_count = pd.read_sql_query("SELECT COUNT(DISTINCT model) as count FROM snapshots", conn).iloc[0]['count']
@@ -483,6 +598,7 @@ def api_stats():
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)})
+
 
 # ============================================
 # RUN
