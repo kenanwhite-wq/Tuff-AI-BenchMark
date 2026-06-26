@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -11,8 +11,11 @@ import {
   Tooltip,
 } from 'recharts';
 import './App.css';
+import ModelComments from './components/ModelComments';
 
-const API = axios.create({ baseURL: 'http://localhost:5001/api', timeout: 5000 });
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+
+const API = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
 
 export default function ModelPage() {
   const { modelName } = useParams();
@@ -48,6 +51,12 @@ export default function ModelPage() {
     composite_score: h.composite_score
   })).reverse();
 
+  const formatScore = (value) => {
+    if (value == null || value === '—') return '—';
+    const num = Number(value);
+    return Number.isFinite(num) ? num.toFixed(1) : value;
+  };
+
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f7f6ff', minHeight: '100vh', color: '#18181b' }}>
       <div style={{ background: '#4f46e5', color: 'white', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -69,16 +78,40 @@ export default function ModelPage() {
               <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
                 <div style={{ background: '#fafafa', borderRadius: 8, padding: 12, width: 140 }}>
                   <div style={{ fontSize: 12, color: '#71717a' }}>Human preference</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{data.category_scores?.human_preference ?? '—'}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{formatScore(data.category_scores?.human_preference ?? '—')}</div>
                 </div>
                 <div style={{ background: '#fafafa', borderRadius: 8, padding: 12, width: 140 }}>
                   <div style={{ fontSize: 12, color: '#71717a' }}>Reasoning</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{data.category_scores?.reasoning ?? '—'}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{formatScore(data.category_scores?.reasoning ?? '—')}</div>
                 </div>
                 <div style={{ background: '#fafafa', borderRadius: 8, padding: 12, width: 140 }}>
                   <div style={{ fontSize: 12, color: '#71717a' }}>Coding</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{data.category_scores?.coding ?? '—'}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>{formatScore(data.category_scores?.coding ?? '—')}</div>
                 </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ background: '#eef2ff', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 12, color: '#4338ca' }}>Community Elo</div>
+                <div style={{ fontSize: 34, fontWeight: 800, marginTop: 8, color: '#312e81' }}>
+                  {data.community_elo != null ? Number(data.community_elo).toFixed(0) : 'No Elo yet'}
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                  {data.votes_total > 0 ? `${data.votes_total} community votes` : 'No votes yet'}
+                </div>
+              </div>
+              <div style={{ background: '#fafafa', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 12, color: '#71717a' }}>Win / Loss</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginTop: 8 }}>{data.votes_won ?? 0} / {data.votes_lost ?? 0}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Recorded from pairwise voting</div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: '#52525b' }}>Comments</h3>
+              <div style={{ background: 'white', borderRadius: 10, border: '1px solid #eef2ff', padding: 12 }}>
+                <ModelComments model={data.model} autoExpand={true} />
               </div>
             </div>
 
@@ -160,15 +193,15 @@ export default function ModelPage() {
               <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div style={{ background: '#fff', padding: 8, borderRadius: 8 }}>
                   <div style={{ color: '#6b7280', fontSize: 12 }}>Human pref</div>
-                  <div style={{ fontWeight: 800 }}>{data.category_scores?.human_preference ?? '—'}</div>
+                  <div style={{ fontWeight: 800 }}>{formatScore(data.category_scores?.human_preference ?? '—')}</div>
                 </div>
                 <div style={{ background: '#fff', padding: 8, borderRadius: 8 }}>
                   <div style={{ color: '#6b7280', fontSize: 12 }}>Reasoning</div>
-                  <div style={{ fontWeight: 800 }}>{data.category_scores?.reasoning ?? '—'}</div>
+                  <div style={{ fontWeight: 800 }}>{formatScore(data.category_scores?.reasoning ?? '—')}</div>
                 </div>
                 <div style={{ background: '#fff', padding: 8, borderRadius: 8 }}>
                   <div style={{ color: '#6b7280', fontSize: 12 }}>Coding</div>
-                  <div style={{ fontWeight: 800 }}>{data.category_scores?.coding ?? '—'}</div>
+                  <div style={{ fontWeight: 800 }}>{formatScore(data.category_scores?.coding ?? '—')}</div>
                 </div>
                 <div style={{ background: '#fff', padding: 8, borderRadius: 8 }}>
                   <div style={{ color: '#6b7280', fontSize: 12 }}>Agentic</div>

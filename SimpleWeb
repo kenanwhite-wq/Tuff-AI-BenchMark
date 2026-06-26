@@ -3,18 +3,37 @@ WEB INTERFACE - MERGED VERSION
 Reliable data display + feed approval
 """
 
-from flask import Flask, render_template_string, jsonify
+from flask import Flask, render_template_string, jsonify, request
 from urllib.parse import unquote
 import sqlite3
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import os
-from config import DB_NAME, SOURCES, get_composite_scores, approve_feed_entry, normalize_model_name, COMPOSITE_TABLE
+from config import (
+    DB_NAME,
+    SOURCES,
+    get_composite_scores,
+    approve_feed_entry,
+    normalize_model_name,
+    COMPOSITE_TABLE,
+    get_vote_pair,
+    record_vote,
+    get_community_rankings,
+    get_vote_stats,
+    add_comment,
+    get_comments,
+    build_comment_tree,
+    like_comment,
+    unlike_comment,
+    delete_comment,
+    init_database,
+)
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+init_database()
 
 def convert_pandas_types(obj):
     if isinstance(obj, dict):
@@ -394,16 +413,167 @@ def api_reject(entry_id):
     return jsonify({'status': 'rejected'})
 
 
+@app.route('/api/comments/<path:model_name>', methods=['GET'])
+def api_get_comments(model_name):
+    """Get comments for a model."""
+    decoded_name = unquote(model_name)
+    if request.args.get('tree') == '1':
+        return jsonify(convert_pandas_types(build_comment_tree(decoded_name, limit=request.args.get('limit', 100, type=int))))
+
+    df = get_comments(decoded_name, limit=request.args.get('limit', 50, type=int))
+    if df.empty:
+        return jsonify([])
+    return jsonify(convert_pandas_types(df.to_dict('records')))
+
+
+@app.route('/api/comments', methods=['POST'])
+def api_add_comment():
+    """Create a comment for a model."""
+    data = request.json or {}
+    model = data.get('model')
+    comment = data.get('comment')
+    username = data.get('username')
+    parent_id = data.get('parent_id')
+    session_id = data.get('session_id')
+
+    if not model or not comment:
+        return jsonify({'error': 'Model and comment are required'}), 400
+
+    if not session_id:
+        session_id = request.headers.get('X-Session-ID')
+
+    if parent_id is not None and parent_id != '':
+        try:
+            parent_id = int(parent_id)
+        except (TypeError, ValueError):
+            return jsonify({'error': 'parent_id must be an integer'}), 400
+
+    result = add_comment(model, comment, username, session_id, parent_id)
+    if 'error' in result:
+        return jsonify(result), 400
+    return jsonify(result), 201
+
+
+@app.route('/api/comments/<int:comment_id>/like', methods=['POST'])
+def api_like_comment(comment_id):
+    """Like a comment."""
+    data = request.json or {}
+    session_id = data.get('session_id') or request.headers.get('X-Session-ID') or 'anonymous'
+    return jsonify(like_comment(comment_id, session_id))
+
+
+@app.route('/api/comments/<int:comment_id>/unlike', methods=['POST'])
+def api_unlike_comment(comment_id):
+    """Unlike a comment."""
+    data = request.json or {}
+    session_id = data.get('session_id') or request.headers.get('X-Session-ID') or 'anonymous'
+    return jsonify(unlike_comment(comment_id, session_id))
+
+
+@app.route('/api/comments/<int:comment_id>', methods=['DELETE'])
+def api_delete_comment(comment_id):
+    """Delete a comment."""
+    data = request.json or {}
+    session_id = data.get('session_id') or request.headers.get('X-Session-ID')
+    return jsonify(delete_comment(comment_id, session_id))
+
+
 @app.route('/api/models')
 def api_models():
     composites = get_composite_scores()
-    if composites.empty:
+    results = []
+    if not composites.empty:
+        df = composites.sort_values('composite_score', ascending=False)
+        results = df[['model', 'composite_score', 'sources_available']].copy().reset_index(drop=True).to_dict('records')
+        for i, item in enumerate(results):
+            item['rank'] = i + 1
+
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        elo_df = pd.read_sql_query("SELECT model, rating, votes_total FROM elo_ratings", conn)
+        if not elo_df.empty:
+            # build set of existing normalized names to avoid duplicates
+            existing = {normalize_model_name(item['model']).lower() for item in results}
+            for _, row in elo_df.iterrows():
+                raw_model = row['model']
+                normalized = normalize_model_name(raw_model)
+                if normalized.lower() not in existing:
+                    results.append({
+                        'model': normalized,
+                        'composite_score': None,
+                        'sources_available': 0,
+                        'rank': None,
+                        'community_elo': float(row['rating']),
+                        'votes_total': int(row['votes_total'] or 0),
+                        'raw_names': raw_model
+                    })
+                    existing.add(normalized.lower())
+                else:
+                    # append raw alias to existing result's raw_names
+                    for item in results:
+                        if normalize_model_name(item['model']).lower() == normalized.lower():
+                            if 'raw_names' in item and item['raw_names']:
+                                if raw_model not in item['raw_names']:
+                                    item['raw_names'] = f"{item['raw_names']} | {raw_model}"
+                            else:
+                                item['raw_names'] = raw_model
+                            break
+    finally:
+        conn.close()
+
+    return jsonify(convert_pandas_types(results))
+
+
+# ============================================
+# COMMUNITY VOTING API ENDPOINTS
+# ============================================
+
+@app.route('/api/vote/pair')
+def api_vote_pair():
+    """Get a pair of models to vote on"""
+    model_a, model_b = get_vote_pair()
+
+    if model_a is None or model_b is None:
+        return jsonify({'error': 'Not enough models'}), 404
+
+    return jsonify({'model_a': model_a, 'model_b': model_b})
+
+
+@app.route('/api/vote/submit', methods=['POST'])
+def api_vote_submit():
+    """Submit a vote"""
+    data = request.json or {}
+    model_a = data.get('model_a')
+    model_b = data.get('model_b')
+    winner = data.get('winner')
+    session_id = data.get('session_id', 'anonymous')
+
+    if not model_a or not model_b or not winner:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    if winner not in [model_a, model_b]:
+        return jsonify({'error': 'Winner must be one of the models'}), 400
+
+    result = record_vote(model_a, model_b, winner, session_id)
+    return jsonify(result)
+
+
+@app.route('/api/vote/rankings')
+def api_vote_rankings():
+    """Get community rankings"""
+    limit = request.args.get('limit', 20, type=int)
+    df = get_community_rankings(limit)
+
+    if df.empty:
         return jsonify([])
-    df = composites.sort_values('composite_score', ascending=False)
-    data = df[['model', 'composite_score', 'sources_available']].copy().reset_index(drop=True).to_dict('records')
-    for i, item in enumerate(data):
-        item['rank'] = i + 1
-    return jsonify(convert_pandas_types(data))
+
+    return jsonify(convert_pandas_types(df.to_dict('records')))
+
+
+@app.route('/api/vote/stats')
+def api_vote_stats():
+    """Get voting statistics"""
+    return jsonify(get_vote_stats())
 
 
 @app.route('/api/model/<path:model_name>')
@@ -423,10 +593,16 @@ def api_model(model_name):
             comps = comps.reset_index(drop=True)
             comps['rank'] = range(1, len(comps) + 1)
 
-            # try normalized name first, then decoded, then case-insensitive
+            # try normalized name first, then decoded, then raw source names
             match = comps[comps['model'].str.lower() == norm_name.lower()]
             if match.empty:
                 match = comps[comps['model'].str.lower() == decoded_name.lower()]
+
+            if match.empty and 'raw_names' in comps.columns:
+                search_term = decoded_name.lower()
+                norm_term = norm_name.lower()
+                match = comps[comps['raw_names'].str.lower().str.contains(search_term, na=False) |
+                              comps['raw_names'].str.lower().str.contains(norm_term, na=False)]
 
             if not match.empty:
                 composite_score = float(match.iloc[0]['composite_score'])
@@ -493,6 +669,27 @@ def api_model(model_name):
                 'has_data': True
             })
 
+    # community Elo stats
+    community_elo = None
+    votes_won = 0
+    votes_lost = 0
+    votes_total = 0
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT model, rating, votes_won, votes_lost, votes_total FROM elo_ratings "
+            "WHERE LOWER(model) = LOWER(?) OR LOWER(model) = LOWER(?)",
+            (decoded_name, norm_name)
+        )
+        row = cur.fetchone()
+        if row:
+            community_elo = float(row[1])
+            votes_won = int(row[2] or 0)
+            votes_lost = int(row[3] or 0)
+            votes_total = int(row[4] or 0)
+    except Exception:
+        community_elo = None
+
     # category composite scores
     category_scores = {}
     mapping = {
@@ -534,7 +731,7 @@ def api_model(model_name):
 
     conn.close()
 
-    if composite_score is None and not any(s['has_data'] for s in source_scores):
+    if composite_score is None and community_elo is None and not any(s['has_data'] for s in source_scores):
         return jsonify({'error': 'Model not found'}), 404
 
     return jsonify(convert_pandas_types({
@@ -542,6 +739,10 @@ def api_model(model_name):
         'composite_score': composite_score,
         'rank': rank,
         'sources_available': sources_available,
+        'community_elo': community_elo,
+        'votes_won': votes_won,
+        'votes_lost': votes_lost,
+        'votes_total': votes_total,
         'category_scores': category_scores,
         'source_scores': source_scores,
         'history': history,

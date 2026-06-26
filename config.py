@@ -478,6 +478,10 @@ def normalize_model_name(name):
     
     original = name.strip()
     name = name.lower().strip()
+
+    # Strip owner prefixes like 'openai/' or 'qwen/' so normalization is consistent.
+    if '/' in name:
+        name = name.split('/')[-1]
     
     # Explicit mappings - if we recognize it, return clean canonical name
     mappings = {
@@ -534,15 +538,29 @@ def normalize_model_name(name):
         'Command R':           ['command-r', 'command r'],
     }
 
+    def variant_matches(normalized_name, variant_value):
+        if normalized_name == variant_value:
+            return True
+        if normalized_name.startswith(variant_value + '-') or normalized_name.startswith(variant_value + '_'):
+            return True
+        if normalized_name.startswith(variant_value + ' '):
+            return True
+        if normalized_name.endswith('-' + variant_value) or normalized_name.endswith('_' + variant_value):
+            return True
+        if re.search(rf'(?:^|[\s\-_\/]){re.escape(variant_value)}(?:$|[\s\-_\/])', normalized_name):
+            return True
+        return False
+
     # Check mappings first - exact and partial
     for canonical, variants in mappings.items():
         for variant in variants:
-            if name == variant or name.startswith(variant) or variant in name:
+            if variant_matches(name, variant):
                 return canonical
 
     # Not in mappings - do light cleanup only, preserve the name
     # Just remove date suffixes and clean separators, nothing aggressive
     cleaned = name
+    cleaned = re.sub(r'\s*\([^)]*\)', '', cleaned)
     cleaned = re.sub(r'[-_](20\d{2}[-_]?(0[1-9]|1[0-2])[-_]?(0[1-9]|[12][0-9]|3[01]))', '', cleaned)
     cleaned = re.sub(r'[-_]20\d{6}', '', cleaned)
     cleaned = re.sub(r'[-_]20\d{4}', '', cleaned)
@@ -773,6 +791,176 @@ def approve_feed_entry(entry_id):
     conn.commit()
     conn.close()
 
+# ============================================
+# COMMUNITY VOTING FUNCTIONS
+# ============================================
+
+def get_elo_rating(model):
+    """Get the current Elo rating for a model"""
+    model = normalize_model_name(model)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT rating FROM elo_ratings WHERE model = ?", (model,))
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        return float(result[0])
+    return 1200.0
+
+
+def update_elo_winner(winner, loser):
+    """
+    Update Elo ratings after a vote.
+    Standard Elo formula with K=32.
+    """
+    winner = normalize_model_name(winner)
+    loser = normalize_model_name(loser)
+    winner_rating = get_elo_rating(winner)
+    loser_rating = get_elo_rating(loser)
+
+    expected_winner = 1 / (1 + 10 ** ((loser_rating - winner_rating) / 400))
+    expected_loser = 1 / (1 + 10 ** ((winner_rating - loser_rating) / 400))
+
+    K = 32
+    new_winner_rating = winner_rating + K * (1 - expected_winner)
+    new_loser_rating = loser_rating + K * (0 - expected_loser)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        INSERT INTO elo_ratings (model, rating, votes_won, votes_total, updated_at)
+        VALUES (?, ?, 1, 1, ?)
+        ON CONFLICT(model) DO UPDATE SET
+            rating = ?,
+            votes_won = votes_won + 1,
+            votes_total = votes_total + 1,
+            updated_at = ?
+    ''', (winner, new_winner_rating, datetime.now().isoformat(), new_winner_rating, datetime.now().isoformat()))
+
+    cursor.execute('''
+        INSERT INTO elo_ratings (model, rating, votes_lost, votes_total, updated_at)
+        VALUES (?, ?, 1, 1, ?)
+        ON CONFLICT(model) DO UPDATE SET
+            rating = ?,
+            votes_lost = votes_lost + 1,
+            votes_total = votes_total + 1,
+            updated_at = ?
+    ''', (loser, new_loser_rating, datetime.now().isoformat(), new_loser_rating, datetime.now().isoformat()))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        'winner': {'model': winner, 'rating': new_winner_rating},
+        'loser': {'model': loser, 'rating': new_loser_rating}
+    }
+
+
+def record_vote(model_a, model_b, winner, session_id=None):
+    """
+    Record a vote and update Elo ratings.
+    Returns the updated ratings.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    loser = model_b if winner == model_a else model_a
+
+    cursor.execute('''
+        INSERT INTO votes (model_a, model_b, winner, session_id, created_at)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (model_a, model_b, winner, session_id, datetime.now().isoformat()))
+
+    conn.commit()
+    conn.close()
+
+    return update_elo_winner(winner, loser)
+
+
+def get_vote_pair():
+    """
+    Get two models to compare.
+    Returns a tuple of (model_a, model_b).
+    Uses the latest snapshot models and biases selection toward models with fewer votes.
+    """
+    conn = get_connection()
+    df = pd.read_sql_query('''
+        SELECT DISTINCT model
+        FROM snapshots
+        WHERE snapshot_timestamp = (
+            SELECT MAX(snapshot_timestamp) FROM snapshots
+        )
+        ORDER BY model
+        LIMIT 100
+    ''', conn)
+
+    if len(df) < 2:
+        df = pd.read_sql_query('''
+            SELECT DISTINCT model FROM snapshots
+            ORDER BY snapshot_timestamp DESC
+            LIMIT 100
+        ''', conn)
+
+    if len(df) < 2:
+        conn.close()
+        return None, None
+
+    models = df['model'].tolist()
+
+    cursor = conn.cursor()
+    weights = []
+    for model in models:
+        cursor.execute("SELECT votes_total FROM elo_ratings WHERE model = ?", (model,))
+        row = cursor.fetchone()
+        votes_total = int(row[0]) if row else 0
+        # Bias toward models with fewer votes; avoid zero weight.
+        weights.append(1.0 / (votes_total + 1))
+
+    conn.close()
+
+    import random
+    try:
+        model_a = random.choices(models, weights=weights, k=1)[0]
+        remaining = [m for m in models if m != model_a]
+        remaining_weights = [w for m, w in zip(models, weights) if m != model_a]
+        model_b = random.choices(remaining, weights=remaining_weights, k=1)[0]
+    except Exception:
+        model_a, model_b = random.sample(models, 2)
+
+    return model_a, model_b
+
+
+def get_community_rankings(limit=20):
+    """Get the top models by community Elo rating"""
+    conn = get_connection()
+    df = pd.read_sql_query('''
+        SELECT model, rating, votes_won, votes_lost, votes_total, updated_at
+        FROM elo_ratings
+        WHERE votes_total > 0
+        ORDER BY rating DESC
+        LIMIT ?
+    ''', conn, params=(limit,))
+    conn.close()
+    return df
+
+
+def get_vote_stats():
+    """Get voting statistics"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM votes")
+    total_votes = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(DISTINCT model) FROM elo_ratings WHERE votes_total > 0")
+    total_models = cursor.fetchone()[0]
+    conn.close()
+
+    return {
+        'total_votes': total_votes,
+        'total_models': total_models
+    }
+
+
 def save_changelog_entry(entry):
     """Save a methodology changelog entry"""
     conn = get_connection()
@@ -847,10 +1035,192 @@ def init_database():
             updated_at TEXT
         )
     ''')
+
+    # NEW: Votes table for community voting
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS votes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            model_a TEXT NOT NULL,
+            model_b TEXT NOT NULL,
+            winner TEXT NOT NULL,
+            voter_id TEXT,
+            session_id TEXT,
+            created_at TEXT
+        )
+    ''')
+
+    # NEW: Elo ratings table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS elo_ratings (
+            model TEXT PRIMARY KEY,
+            rating REAL DEFAULT 1200,
+            votes_won INTEGER DEFAULT 0,
+            votes_lost INTEGER DEFAULT 0,
+            votes_total INTEGER DEFAULT 0,
+            updated_at TEXT
+        )
+    ''')
+
+    # NEW: Model comments table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS model_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            model TEXT NOT NULL,
+            comment TEXT NOT NULL,
+            username TEXT,
+            session_id TEXT,
+            parent_id INTEGER,
+            likes INTEGER DEFAULT 0,
+            is_approved INTEGER DEFAULT 1,
+            created_at TEXT
+        )
+    ''')
+
+    # NEW: Comment likes table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS comment_likes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            comment_id INTEGER NOT NULL,
+            session_id TEXT NOT NULL,
+            created_at TEXT,
+            UNIQUE(comment_id, session_id)
+        )
+    ''')
     
     conn.commit()
     conn.close()
     print("✅ Database initialized with all tables")
+
+
+def add_comment(model, comment, username=None, session_id=None, parent_id=None):
+    """Add a comment to a model."""
+    if not comment or len(comment.strip()) < 2:
+        return {'error': 'Comment too short (minimum 2 characters)'}
+
+    if len(comment) > 1000:
+        return {'error': 'Comment too long (maximum 1000 characters)'}
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO model_comments (model, comment, username, session_id, parent_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (model, comment.strip(), username, session_id, parent_id, datetime.now().isoformat()))
+    comment_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return {
+        'id': comment_id,
+        'model': model,
+        'comment': comment.strip(),
+        'username': username or 'Anonymous',
+        'created_at': datetime.now().isoformat(),
+    }
+
+
+def get_comments(model, limit=50):
+    """Get comments for a model."""
+    conn = get_connection()
+    df = pd.read_sql_query('''
+        SELECT id, model, comment, username, parent_id, likes, is_approved, created_at
+        FROM model_comments
+        WHERE model = ? AND is_approved = 1
+        ORDER BY created_at DESC
+        LIMIT ?
+    ''', conn, params=(model, limit))
+    conn.close()
+    return df
+
+
+def build_comment_tree(model, limit=100):
+    """Build a nested comment tree for a model."""
+    comments = get_comments(model, limit=limit)
+    if comments.empty:
+        return []
+
+    comments = comments.copy()
+    comments['replies'] = [[] for _ in range(len(comments))]
+    by_id = {}
+    roots = []
+
+    for _, row in comments.iterrows():
+        item = {
+            'id': int(row['id']),
+            'model': row['model'],
+            'comment': row['comment'],
+            'username': row['username'],
+            'parent_id': int(row['parent_id']) if pd.notna(row['parent_id']) else None,
+            'likes': int(row['likes']) if pd.notna(row['likes']) else 0,
+            'is_approved': int(row['is_approved']) if pd.notna(row['is_approved']) else 1,
+            'created_at': row['created_at'],
+            'replies': []
+        }
+        by_id[item['id']] = item
+
+    for item in by_id.values():
+        if item['parent_id'] and item['parent_id'] in by_id:
+            by_id[item['parent_id']]['replies'].append(item)
+        else:
+            roots.append(item)
+
+    roots.sort(key=lambda item: item['created_at'], reverse=True)
+    for root in roots:
+        root['replies'].sort(key=lambda item: item['created_at'])
+
+    return roots
+
+
+def like_comment(comment_id, session_id):
+    """Like a comment once per session."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO comment_likes (comment_id, session_id, created_at)
+            VALUES (?, ?, ?)
+        ''', (comment_id, session_id, datetime.now().isoformat()))
+        cursor.execute('''
+            UPDATE model_comments SET likes = likes + 1 WHERE id = ?
+        ''', (comment_id,))
+        conn.commit()
+        conn.close()
+        return {'success': True}
+    except sqlite3.IntegrityError:
+        conn.close()
+        return {'error': 'Already liked'}
+
+
+def unlike_comment(comment_id, session_id):
+    """Remove a like from a comment."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        DELETE FROM comment_likes WHERE comment_id = ? AND session_id = ?
+    ''', (comment_id, session_id))
+    cursor.execute('''
+        UPDATE model_comments SET likes = likes - 1 WHERE id = ? AND likes > 0
+    ''', (comment_id,))
+    conn.commit()
+    conn.close()
+    return {'success': True}
+
+
+def delete_comment(comment_id, session_id=None):
+    """Delete a comment (soft delete)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    if session_id:
+        cursor.execute('''
+            UPDATE model_comments SET is_approved = 0 WHERE id = ? AND session_id = ?
+        ''', (comment_id, session_id))
+    else:
+        cursor.execute('''
+            UPDATE model_comments SET is_approved = 0 WHERE id = ?
+        ''', (comment_id,))
+    conn.commit()
+    conn.close()
+    return {'success': True}
 
 # ============================================
 # CHANGE DETECTION

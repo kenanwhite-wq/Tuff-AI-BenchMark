@@ -4,8 +4,10 @@ import './App.css';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import ModelPage from './ModelPage';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+
 const API = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: API_BASE_URL,
   timeout: 5000,
 });
 
@@ -18,10 +20,67 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [priceToggle, setPriceToggle] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [votePair, setVotePair] = useState(null);
+  const [voteLoading, setVoteLoading] = useState(false);
+  const [communityRankings, setCommunityRankings] = useState([]);
+  const [voteStats, setVoteStats] = useState({});
+  const [showRankings, setShowRankings] = useState(false);
 
-  const filteredModels = searchQuery.trim().length > 0
-    ? models.filter(m => m.model.toLowerCase().includes(searchQuery.toLowerCase()))
-    : models;
+  const filteredModels = (() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return models;
+    return models.filter(m => {
+      const modelName = (m.model || '').toLowerCase();
+      const raw = (m.raw_names || '').toLowerCase();
+      if (modelName.includes(q)) return true;
+      if (raw && raw.includes(q)) return true;
+      // support owner-prefixed queries like 'qwen/qwen3.5-397b-a17b'
+      if (q.includes('/')) {
+        const last = q.split('/').pop();
+        if (modelName.includes(last)) return true;
+        if (raw && raw.includes(last)) return true;
+      }
+      return false;
+    });
+  })();
+
+  const fetchVotePair = async () => {
+    try {
+      const response = await API.get('/vote/pair');
+      setVotePair(response.data);
+      setShowRankings(false);
+    } catch (err) {
+      console.error('Error fetching vote pair:', err);
+    }
+  };
+
+  const submitVote = async (winner) => {
+    if (!votePair || voteLoading) return;
+    setVoteLoading(true);
+
+    try {
+      await API.post('/vote/submit', {
+        model_a: votePair.model_a,
+        model_b: votePair.model_b,
+        winner,
+      });
+      await fetchVotePair();
+    } catch (err) {
+      console.error('Error submitting vote:', err);
+    } finally {
+      setVoteLoading(false);
+    }
+  };
+
+  const fetchRankings = async () => {
+    try {
+      const response = await API.get('/vote/rankings?limit=10');
+      setCommunityRankings(response.data);
+      setShowRankings(true);
+    } catch (err) {
+      console.error('Error fetching rankings:', err);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -29,13 +88,16 @@ function Home() {
       API.get('/feed'),
       API.get('/sources'),
       API.get('/stats'),
+      API.get('/vote/stats'),
     ])
-      .then(([modelsRes, feedRes, sourcesRes, statsRes]) => {
-        setModels(modelsRes.data);
-        setFeed(feedRes.data.filter(item => item.status === 'approved'));
+      .then(([modelsRes, feedRes, sourcesRes, statsRes, voteStatsRes]) => {
+        setModels(modelsRes.data.slice(0, 50));
+        setFeed(feedRes.data.filter(item => item.status === 'approved').slice(0, 50));
         setSources(sourcesRes.data);
         setStats(statsRes.data);
+        setVoteStats(voteStatsRes.data);
         setLoading(false);
+        fetchVotePair();
       })
       .catch(err => {
         console.error('Error fetching data:', err);
@@ -390,30 +452,153 @@ function Home() {
             background: 'white', borderRadius: 10,
             border: '1px solid #e5e7fb', padding: '18px 18px'
           }}>
-            <h3 style={{ fontSize: 13, fontWeight: 800, marginBottom: 4, letterSpacing: '0.5px', color: '#52525b', textTransform: 'uppercase' }}>
-              Community Sentiment
-            </h3>
-            <p style={{ fontSize: 11, color: '#a1a1aa', marginBottom: 14 }}>
-              Informal · not included in composite score
-            </p>
-            <div style={{
-              background: '#f7f6ff', borderRadius: 8, padding: '14px',
-              textAlign: 'center', border: '1px dashed #c7d2fe'
-            }}>
-              <div style={{ fontSize: 22, marginBottom: 6 }}>🗳️</div>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Which is better?</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {models.slice(0, 2).map(m => (
-                  <button key={m.model} style={{
-                    flex: 1, padding: '8px', borderRadius: 6,
-                    border: '1px solid #c7d2fe', background: 'white',
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer', color: '#4f46e5'
-                  }}>
-                    {m.model}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.5px', color: '#52525b', textTransform: 'uppercase' }}>
+                Community Sentiment
+              </h3>
+              <button
+                onClick={() => {
+                  if (!showRankings) {
+                    fetchRankings();
+                  } else {
+                    setShowRankings(false);
+                  }
+                }}
+                style={{
+                  fontSize: 11,
+                  color: '#4f46e5',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                {showRankings ? '← Vote' : 'Rankings →'}
+              </button>
             </div>
+            <p style={{ fontSize: 11, color: '#a1a1aa', marginBottom: 14 }}>
+              {voteStats.total_votes || 0} total votes · {voteStats.total_models || 0} models
+            </p>
+
+            {showRankings ? (
+              <div>
+                {communityRankings.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: 13 }}>
+                    No rankings yet. Be the first to vote!
+                  </div>
+                ) : (
+                  communityRankings.slice(0, 50).map((item, i) => (
+                    <div key={item.model} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 0',
+                      borderBottom: '1px solid #f4f4f5',
+                      fontSize: 13
+                    }}>
+                      <span style={{
+                        fontWeight: 700,
+                        color: i < 3 ? '#4f46e5' : '#71717a',
+                        width: 24
+                      }}>
+                        #{i + 1}
+                      </span>
+                      <span
+                        onClick={() => navigate(`/model/${encodeURIComponent(item.model)}`)}
+                        style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', color: '#111' }}
+                      >
+                        {item.model}
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#4f46e5' }}>
+                        {Number(item.rating).toFixed(0)}
+                      </span>
+                    </div>
+                  ))
+                )}
+                <button
+                  onClick={fetchRankings}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    marginTop: 10,
+                    borderRadius: 6,
+                    border: '1px solid #e5e7fb',
+                    background: 'white',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    color: '#71717a'
+                  }}
+                >
+                  Refresh Rankings
+                </button>
+              </div>
+            ) : votePair ? (
+              <div style={{
+                background: '#f7f6ff', borderRadius: 8, padding: '14px',
+                textAlign: 'center', border: '1px dashed #c7d2fe'
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>🗳️</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Which is better?</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => submitVote(votePair.model_a)}
+                    disabled={voteLoading}
+                    style={{
+                      flex: 1,
+                      padding: '10px 8px',
+                      borderRadius: 6,
+                      border: '1px solid #c7d2fe',
+                      background: 'white',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: voteLoading ? 'not-allowed' : 'pointer',
+                      color: '#4f46e5',
+                      opacity: voteLoading ? 0.6 : 1
+                    }}
+                  >
+                    {votePair.model_a}
+                  </button>
+                  <button
+                    onClick={() => submitVote(votePair.model_b)}
+                    disabled={voteLoading}
+                    style={{
+                      flex: 1,
+                      padding: '10px 8px',
+                      borderRadius: 6,
+                      border: '1px solid #c7d2fe',
+                      background: 'white',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: voteLoading ? 'not-allowed' : 'pointer',
+                      color: '#4f46e5',
+                      opacity: voteLoading ? 0.6 : 1
+                    }}
+                  >
+                    {votePair.model_b}
+                  </button>
+                </div>
+                <button
+                  onClick={fetchVotePair}
+                  disabled={voteLoading}
+                  style={{
+                    marginTop: 10,
+                    padding: '6px 12px',
+                    fontSize: 11,
+                    color: '#4f46e5',
+                    background: 'none',
+                    border: 'none',
+                    cursor: voteLoading ? 'not-allowed' : 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Skip
+                </button>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#a1a1aa', padding: '10px' }}>
+                Loading vote pair...
+              </div>
+            )}
           </div>
 
           <div style={{ background: '#4f46e5', borderRadius: 10, padding: '18px 18px', color: 'white' }}>
