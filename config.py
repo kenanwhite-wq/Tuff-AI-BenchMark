@@ -473,70 +473,83 @@ PARSER_MAP = {
 # ============================================
 
 def normalize_model_name(name):
-    """
-    Normalize model names across different sources.
-    This is the critical function for matching the same model across different leaderboards.
-    """
     if not name or not isinstance(name, str):
         return name
     
-    # Convert to lowercase
+    original = name.strip()
     name = name.lower().strip()
     
-    # Remove common prefixes/suffixes
-    name = name.replace(' (', '(')
-    name = name.replace(')', '')
-    
-    # Remove date suffixes (e.g., -2024-11-20, -20241022, etc.)
-    name = re.sub(r'[-_](20\d{2}[-_]?(0[1-9]|1[0-2])[-_]?(0[1-9]|[12][0-9]|3[01]))', '', name)
-    name = re.sub(r'[-_]20\d{6}', '', name)  # YYYYMMDD format
-    name = re.sub(r'[-_]20\d{4}', '', name)  # YYYYMM format
-    
-    # Remove "instruct", "chat", "preview", "thinking", "reasoning", etc.
-    name = re.sub(r'-(instruct|chat|preview|thinking|reasoning|flash-lite|ultra|pro|max|mini|small|large)', '', name)
-    name = re.sub(r'-(v|version)[0-9\.]+', '', name)
-    
-    # Remove common separators
-    name = re.sub(r'[-_/]', ' ', name)
-    
-    # Remove " (max)" and similar suffixes
-    name = re.sub(r'\s*\([^)]*\)', '', name)
-    
-    # Common model name mappings
+    # Explicit mappings - if we recognize it, return clean canonical name
     mappings = {
-        'gpt-4o': ['gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-2024-08-06', 'gpt-4o-2024-11-20'],
-        'gpt-4-turbo': ['gpt-4-turbo', 'gpt-4-turbo-2024-04-09'],
-        'gpt-4.5': ['gpt-4.5', 'gpt-4.5-preview'],
-        'gpt-5': ['gpt-5', 'gpt-5 high'],
-        'claude-3.5-sonnet': ['claude-3.5-sonnet', 'claude-3-5-sonnet', 'claude-3.5-sonnet-20241022', 'claude-3.5-sonnet-20240620'],
-        'claude-3-opus': ['claude-3-opus', 'claude-3-opus-20240229'],
-        'claude-3-haiku': ['claude-3-haiku', 'claude-3-haiku-20240307'],
-        'gemini-1.5-pro': ['gemini-1.5-pro', 'gemini-1.5-pro-002'],
-        'gemini-1.5-flash': ['gemini-1.5-flash', 'gemini-1.5-flash-002'],
-        'gemini-2.0-flash': ['gemini-2.0-flash', 'gemini-2.0-flash-exp', 'gemini-2.0-flash-lite'],
-        'gemini-2.5-pro': ['gemini-2.5-pro', 'gemini-2.5-pro-exp-03-25'],
-        'deepseek-v3': ['deepseek-v3', 'deepseek-v3-0324'],
-        'deepseek-r1': ['deepseek-r1', 'deepseek-r1-0528'],
-        'qwen2.5': ['qwen2.5', 'qwen-2.5'],
-        'qwen3': ['qwen3', 'qwen-3'],
-        'llama-3.1': ['llama-3.1', 'llama-3.1-8b', 'llama-3.1-70b', 'llama-3.1-405b'],
-        'llama-3': ['llama-3', 'llama-3-8b', 'llama-3-70b'],
-        'mistral-large': ['mistral-large', 'mistral-large-2407', 'mistral-large-2411'],
-        'mixtral': ['mixtral-8x7b', 'mixtral-8x22b'],
+        'GPT-4o':              ['gpt-4o', 'gpt4o', 'gpt-4o-2024'],
+        'GPT-4 Turbo':         ['gpt-4-turbo', 'gpt4-turbo'],
+        'GPT-4.5':             ['gpt-4.5', 'gpt-4.5-preview'],
+        'GPT-5':               ['gpt-5', 'gpt5'],
+        'GPT-3.5 Turbo':       ['gpt-3.5-turbo', 'gpt-35-turbo'],
+        'o1':                  ['openai o1', 'o1-preview', 'o1-mini'],
+        'o3':                  ['openai o3', 'o3-mini'],
+        'o4-mini':             ['o4-mini', 'openai o4-mini'],
+
+        'Claude 3.5 Sonnet':   ['claude-3.5-sonnet', 'claude-3-5-sonnet', 'claude-3.5-sonnet-2024'],
+        'Claude 3.5 Haiku':    ['claude-3.5-haiku', 'claude-3-5-haiku'],
+        'Claude 3 Opus':       ['claude-3-opus', 'claude-3.0-opus'],
+        'Claude 3 Sonnet':     ['claude-3-sonnet', 'claude-3.0-sonnet'],
+        'Claude 3 Haiku':      ['claude-3-haiku', 'claude-3.0-haiku'],
+        'Claude 3.7 Sonnet':   ['claude-3.7-sonnet', 'claude-3-7-sonnet'],
+        'Claude 4 Sonnet':     ['claude-sonnet-4', 'claude-4-sonnet'],
+        'Claude 4 Opus':       ['claude-opus-4', 'claude-4-opus'],
+
+        'Gemini 2.5 Pro':      ['gemini-2.5-pro', 'gemini2.5-pro'],
+        'Gemini 2.5 Flash':    ['gemini-2.5-flash', 'gemini2.5-flash'],
+        'Gemini 2.0 Flash':    ['gemini-2.0-flash', 'gemini-2.0-flash-exp'],
+        'Gemini 1.5 Pro':      ['gemini-1.5-pro', 'gemini-1.5-pro-002'],
+        'Gemini 1.5 Flash':    ['gemini-1.5-flash', 'gemini-1.5-flash-002'],
+
+        'DeepSeek-V3':         ['deepseek-v3', 'deepseek v3'],
+        'DeepSeek-R1':         ['deepseek-r1', 'deepseek r1'],
+        'DeepSeek-V2':         ['deepseek-v2', 'deepseek v2'],
+
+        'Llama 3.1 405B':      ['llama-3.1-405b', 'meta-llama-3.1-405b'],
+        'Llama 3.1 70B':       ['llama-3.1-70b', 'meta-llama-3.1-70b'],
+        'Llama 3.1 8B':        ['llama-3.1-8b', 'meta-llama-3.1-8b'],
+        'Llama 3 70B':         ['llama-3-70b', 'meta-llama-3-70b'],
+        'Llama 3 8B':          ['llama-3-8b', 'meta-llama-3-8b'],
+        'Llama 4 Scout':       ['llama-4-scout', 'llama4-scout'],
+        'Llama 4 Maverick':    ['llama-4-maverick', 'llama4-maverick'],
+
+        'Qwen3':               ['qwen3', 'qwen-3'],
+        'Qwen2.5':             ['qwen2.5', 'qwen-2.5'],
+        'Qwen2':               ['qwen2', 'qwen-2'],
+        'QwQ':                 ['qwq', 'qwq-32b'],
+
+        'Mistral Large':       ['mistral-large', 'mistral large'],
+        'Mistral Small':       ['mistral-small', 'mistral small'],
+        'Mixtral 8x7B':        ['mixtral-8x7b', 'mixtral 8x7b'],
+        'Mixtral 8x22B':       ['mixtral-8x22b', 'mixtral 8x22b'],
+
+        'Grok 3':              ['grok-3', 'grok3'],
+        'Grok 2':              ['grok-2', 'grok2'],
+
+        'Command R+':          ['command-r-plus', 'command r+'],
+        'Command R':           ['command-r', 'command r'],
     }
-    
-    # Check if the name matches any of our mappings
+
+    # Check mappings first - exact and partial
     for canonical, variants in mappings.items():
         for variant in variants:
-            if variant in name or name in variant:
+            if name == variant or name.startswith(variant) or variant in name:
                 return canonical
-    
-    # Remove everything after the first common separator for generic cleanup
-    for sep in [' ', '/', ':']:
-        if sep in name and len(name.split(sep)[0]) > 2:
-            return name.split(sep)[0]
-    
-    return name
+
+    # Not in mappings - do light cleanup only, preserve the name
+    # Just remove date suffixes and clean separators, nothing aggressive
+    cleaned = name
+    cleaned = re.sub(r'[-_](20\d{2}[-_]?(0[1-9]|1[0-2])[-_]?(0[1-9]|[12][0-9]|3[01]))', '', cleaned)
+    cleaned = re.sub(r'[-_]20\d{6}', '', cleaned)
+    cleaned = re.sub(r'[-_]20\d{4}', '', cleaned)
+    cleaned = re.sub(r'[-_]', ' ', cleaned)
+    cleaned = cleaned.strip().title()
+
+    return cleaned if cleaned else original
 
 # ============================================
 # DATABASE UTILITIES
@@ -728,7 +741,7 @@ def save_feed_entries(changes):
     
     conn = get_connection()
     df = pd.DataFrame(changes)
-    df['status'] = 'draft'
+    df['status'] = 'approved'
     df['created_at'] = datetime.now().isoformat()
     
     cols = ['model', 'source', 'tier', 'type', 'headline', 'body', 'status', 'created_at']

@@ -23,8 +23,8 @@ function App() {
       API.get('/stats'),
     ])
       .then(([modelsRes, feedRes, sourcesRes, statsRes]) => {
-        setModels(modelsRes.data.slice(0, 8));
-        setFeed(feedRes.data.filter(item => item.status === 'approved').slice(0, 20));
+        setModels(modelsRes.data);
+        setFeed(feedRes.data.filter(item => item.status === 'approved'));
         setSources(sourcesRes.data);
         setStats(statsRes.data);
         setLoading(false);
@@ -300,7 +300,7 @@ function App() {
                         }}>
                           {sources.find(s => s.name === item.source)?.label || item.source}
                         </span>
-                        <span style={{ color: '#a1a1aa' }}>{item.created_at?.slice(0, 16)}</span>
+                        <span style={{ color: '#a1a1aa' }}>{item.created_at}</span>
                       </div>
                     </div>
                   </div>
@@ -377,7 +377,7 @@ function App() {
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
                     color: '#4f46e5'
                   }}>
-                    {m.model.slice(0, 12)}
+                    {m.model}
                   </button>
                 ))}
               </div>

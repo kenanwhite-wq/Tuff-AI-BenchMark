@@ -1114,3 +1114,852 @@ ERRORS:
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 
 EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 03:54:22
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 03:54:23
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 04:50:44
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 04:50:45
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 07:42:18
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 07:42:18
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 10:46:06
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 10:46:07
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 14:41:03
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 14:41:03
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 19:06:40
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 19:06:40
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 21:18:38
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 21:18:38
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-24 21:59:59
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-24 22:00:00
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-25 18:30:33
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-25 18:30:34
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 47 models
+  📊 Score range: 3740.0 - 8060.0
+  ✅ Fetched 47 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-26 12:07:37
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-26 12:07:37
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-26 13:10:12
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-26 13:10:12
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-26 13:15:51
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-26 13:15:51
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-26 13:22:06
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-26 13:22:06
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 No feed entries yet.
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
