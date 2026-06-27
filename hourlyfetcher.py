@@ -110,18 +110,19 @@ def fetch_source(source_config):
         return None
     
     try:
-        # If url is None, call parser directly (Hugging Face sources)
-        if url is None:
+        # If url is None or the parser handles its own authenticated requests,
+        # call the parser directly with no response argument
+        if url is None or source_config.get('self_fetch', False):
             df = parser()
         else:
             # Fetch from URL
             print(f"  📥 Fetching: {url}")
             response = requests.get(url, timeout=15)
-            
+
             if response.status_code != 200:
                 print(f"  ❌ Error {response.status_code}: {response.text[:100]}")
                 return None
-            
+
             # Parse the response
             df = parser(response)
         

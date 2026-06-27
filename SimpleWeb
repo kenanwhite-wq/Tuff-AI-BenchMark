@@ -480,19 +480,22 @@ def api_delete_comment(comment_id):
 
 @app.route('/api/models')
 def api_models():
+    # get_composite_scores() now reads pre-normalized names from the DB column
+    # populated by save_snapshot() — no Ollama calls, instant response
     composites = get_composite_scores()
     results = []
     if not composites.empty:
-        df = composites.sort_values('composite_score', ascending=False)
-        results = df[['model', 'composite_score', 'sources_available']].copy().reset_index(drop=True).to_dict('records')
+        df = composites.sort_values('composite_score', ascending=False).reset_index(drop=True)
+        results = df[['model', 'composite_score', 'sources_available']].to_dict('records')
         for i, item in enumerate(results):
             item['rank'] = i + 1
 
+    # Append Elo-only models not already in results.
+    # normalize_model_name() is now cache-only — safe to call here.
     conn = sqlite3.connect(DB_NAME)
     try:
         elo_df = pd.read_sql_query("SELECT model, rating, votes_total FROM elo_ratings", conn)
         if not elo_df.empty:
-            # build set of existing normalized names to avoid duplicates
             existing = {normalize_model_name(item['model']).lower() for item in results}
             for _, row in elo_df.iterrows():
                 raw_model = row['model']
@@ -505,16 +508,14 @@ def api_models():
                         'rank': None,
                         'community_elo': float(row['rating']),
                         'votes_total': int(row['votes_total'] or 0),
-                        'raw_names': raw_model
+                        'raw_names': raw_model,
                     })
                     existing.add(normalized.lower())
                 else:
-                    # append raw alias to existing result's raw_names
                     for item in results:
                         if normalize_model_name(item['model']).lower() == normalized.lower():
-                            if 'raw_names' in item and item['raw_names']:
-                                if raw_model not in item['raw_names']:
-                                    item['raw_names'] = f"{item['raw_names']} | {raw_model}"
+                            if item.get('raw_names') and raw_model not in item['raw_names']:
+                                item['raw_names'] = f"{item['raw_names']} | {raw_model}"
                             else:
                                 item['raw_names'] = raw_model
                             break
@@ -751,11 +752,34 @@ def api_model(model_name):
     }))
 
 
+@app.route('/api/feed/entry/<int:entry_id>')
+def api_feed_entry(entry_id):
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        df = pd.read_sql_query(
+            "SELECT * FROM feed_entries WHERE id = ? LIMIT 1",
+            conn, params=(entry_id,)
+        )
+        conn.close()
+        if df.empty:
+            return jsonify({'error': 'Entry not found'}), 404
+        return jsonify(convert_pandas_types(df.to_dict('records')[0]))
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/feed')
 def api_feed():
     conn = sqlite3.connect(DB_NAME)
     try:
-        df = pd.read_sql_query("SELECT * FROM feed_entries ORDER BY created_at DESC LIMIT 50", conn)
+        df = pd.read_sql_query(
+            "SELECT * FROM feed_entries WHERE status = 'approved' "
+            "ORDER BY run_id DESC, "
+            "CASE tier WHEN 'big' THEN 1 WHEN 'moderate' THEN 2 WHEN 'small' THEN 3 END ASC, "
+            "created_at DESC LIMIT 50",
+            conn
+        )
         conn.close()
         return jsonify(convert_pandas_types(df.to_dict('records')))
     except Exception as e:

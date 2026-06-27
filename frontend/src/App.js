@@ -3,12 +3,13 @@ import axios from 'axios';
 import './App.css';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import ModelPage from './ModelPage';
+import ArticlePage from './ArticlePage';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 const API = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 5000,
+  timeout: 30000,
 });
 
 function Home() {
@@ -25,6 +26,40 @@ function Home() {
   const [communityRankings, setCommunityRankings] = useState([]);
   const [voteStats, setVoteStats] = useState({});
   const [showRankings, setShowRankings] = useState(false);
+  const [filters, setFilters] = useState({
+    leaderboard: true,
+    model_release: true,
+    research_paper: true,
+    general_news: true,
+    benchmark: true,
+  });
+
+  const mapFeedItemToFilter = (item) => {
+    if (!item.type) return null;
+    if (item.type === 'rank_change' || item.type === 'score_shift' || item.type === 'new_model') {
+      return 'leaderboard';
+    }
+    if (item.type === 'news_scanner') {
+      if (item.headline && item.headline.startsWith('New model:')) {
+        return 'model_release';
+      }
+      if (item.headline && item.headline.startsWith('Benchmark alert:')) {
+        return 'benchmark';
+      }
+      if (item.tier === 'small') {
+        if (item.source && item.source.includes('arXiv')) {
+          return 'research_paper';
+        }
+        return 'general_news';
+      }
+    }
+    return null;
+  };
+
+  const filteredFeed = feed.filter(item => {
+    const filterKey = mapFeedItemToFilter(item);
+    return filterKey && filters[filterKey];
+  });
 
   const filteredModels = (() => {
     const q = searchQuery.trim().toLowerCase();
@@ -34,7 +69,6 @@ function Home() {
       const raw = (m.raw_names || '').toLowerCase();
       if (modelName.includes(q)) return true;
       if (raw && raw.includes(q)) return true;
-      // support owner-prefixed queries like 'qwen/qwen3.5-397b-a17b'
       if (q.includes('/')) {
         const last = q.split('/').pop();
         if (modelName.includes(last)) return true;
@@ -57,7 +91,6 @@ function Home() {
   const submitVote = async (winner) => {
     if (!votePair || voteLoading) return;
     setVoteLoading(true);
-
     try {
       await API.post('/vote/submit', {
         model_a: votePair.model_a,
@@ -247,7 +280,7 @@ function Home() {
         }}>
           {filteredModels.length === 0 ? (
             <div style={{ color: '#71717a', fontSize: 13, padding: '18px 0' }}>
-              No models match “{searchQuery}”.
+              No models match "{searchQuery}".
             </div>
           ) : filteredModels.map((m, i) => (
             <div key={m.model} style={{
@@ -349,7 +382,7 @@ function Home() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {feed.map(item => {
+              {filteredFeed.map(item => {
                 const tier = tierConfig[item.tier] || tierConfig.moderate;
                 return (
                   <div key={item.id} style={{
@@ -360,8 +393,9 @@ function Home() {
                     display: 'flex',
                     gap: 14,
                     transition: 'box-shadow 0.15s',
-                    cursor: 'default',
+                    cursor: 'pointer',
                   }}
+                    onClick={() => navigate(`/article/${item.id}`)}
                     onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(79,70,229,0.08)'}
                     onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
                   >
@@ -417,6 +451,8 @@ function Home() {
 
         {/* Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Sources & Weights */}
           <div style={{
             background: 'white', borderRadius: 10,
             border: '1px solid #e5e7fb', padding: '18px 18px'
@@ -448,6 +484,57 @@ function Home() {
             </a>
           </div>
 
+          {/* Feed Filters */}
+          <div style={{
+            background: 'white', borderRadius: 10,
+            border: '1px solid #e5e7fb', padding: '18px 18px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.5px', color: '#52525b', textTransform: 'uppercase' }}>
+                Feed Filters
+              </h3>
+              <button
+                onClick={() => {
+                  const allActive = Object.values(filters).every(v => v);
+                  const newFilters = Object.keys(filters).reduce((acc, key) => {
+                    acc[key] = !allActive;
+                    return acc;
+                  }, {});
+                  setFilters(newFilters);
+                }}
+                style={{
+                  fontSize: 11, color: '#4f46e5', background: 'none',
+                  border: 'none', cursor: 'pointer', textDecoration: 'underline'
+                }}
+              >
+                {Object.values(filters).every(v => v) ? 'None' : 'All'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { key: 'leaderboard', label: '☰ Leaderboard Changes' },
+                { key: 'model_release', label: '🤖 Model Releases' },
+                { key: 'research_paper', label: '📄 Research Papers' },
+                { key: 'general_news', label: '📰 General News' },
+                { key: 'benchmark', label: '⚠️ Benchmark Alerts' },
+              ].map(filter => (
+                <label key={filter.key} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  cursor: 'pointer', fontSize: 13, color: '#52525b'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={filters[filter.key]}
+                    onChange={(e) => setFilters({ ...filters, [filter.key]: e.target.checked })}
+                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#4f46e5' }}
+                  />
+                  <span>{filter.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Community Sentiment */}
           <div style={{
             background: 'white', borderRadius: 10,
             border: '1px solid #e5e7fb', padding: '18px 18px'
@@ -458,20 +545,9 @@ function Home() {
               </h3>
               <button
                 onClick={() => {
-                  if (!showRankings) {
-                    fetchRankings();
-                  } else {
-                    setShowRankings(false);
-                  }
+                  if (!showRankings) { fetchRankings(); } else { setShowRankings(false); }
                 }}
-                style={{
-                  fontSize: 11,
-                  color: '#4f46e5',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
+                style={{ fontSize: 11, color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 {showRankings ? '← Vote' : 'Rankings →'}
               </button>
@@ -483,96 +559,47 @@ function Home() {
             {showRankings ? (
               <div>
                 {communityRankings.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: 13 }}>
-                    No rankings yet. Be the first to vote!
-                  </div>
+                  <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: 13 }}>No rankings yet. Be the first to vote!</div>
                 ) : (
                   communityRankings.slice(0, 50).map((item, i) => (
                     <div key={item.model} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '6px 0',
-                      borderBottom: '1px solid #f4f4f5',
-                      fontSize: 13
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '6px 0', borderBottom: '1px solid #f4f4f5', fontSize: 13
                     }}>
-                      <span style={{
-                        fontWeight: 700,
-                        color: i < 3 ? '#4f46e5' : '#71717a',
-                        width: 24
-                      }}>
-                        #{i + 1}
-                      </span>
+                      <span style={{ fontWeight: 700, color: i < 3 ? '#4f46e5' : '#71717a', width: 24 }}>#{i + 1}</span>
                       <span
                         onClick={() => navigate(`/model/${encodeURIComponent(item.model)}`)}
                         style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', color: '#111' }}
                       >
                         {item.model}
                       </span>
-                      <span style={{ fontWeight: 700, color: '#4f46e5' }}>
-                        {Number(item.rating).toFixed(0)}
-                      </span>
+                      <span style={{ fontWeight: 700, color: '#4f46e5' }}>{Number(item.rating).toFixed(0)}</span>
                     </div>
                   ))
                 )}
                 <button
                   onClick={fetchRankings}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    marginTop: 10,
-                    borderRadius: 6,
-                    border: '1px solid #e5e7fb',
-                    background: 'white',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    color: '#71717a'
-                  }}
+                  style={{ width: '100%', padding: '8px', marginTop: 10, borderRadius: 6, border: '1px solid #e5e7fb', background: 'white', cursor: 'pointer', fontSize: 12, color: '#71717a' }}
                 >
                   Refresh Rankings
                 </button>
               </div>
             ) : votePair ? (
-              <div style={{
-                background: '#f7f6ff', borderRadius: 8, padding: '14px',
-                textAlign: 'center', border: '1px dashed #c7d2fe'
-              }}>
+              <div style={{ background: '#f7f6ff', borderRadius: 8, padding: '14px', textAlign: 'center', border: '1px dashed #c7d2fe' }}>
                 <div style={{ fontSize: 22, marginBottom: 6 }}>🗳️</div>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Which is better?</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={() => submitVote(votePair.model_a)}
                     disabled={voteLoading}
-                    style={{
-                      flex: 1,
-                      padding: '10px 8px',
-                      borderRadius: 6,
-                      border: '1px solid #c7d2fe',
-                      background: 'white',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: voteLoading ? 'not-allowed' : 'pointer',
-                      color: '#4f46e5',
-                      opacity: voteLoading ? 0.6 : 1
-                    }}
+                    style={{ flex: 1, padding: '10px 8px', borderRadius: 6, border: '1px solid #c7d2fe', background: 'white', fontSize: 12, fontWeight: 600, cursor: voteLoading ? 'not-allowed' : 'pointer', color: '#4f46e5', opacity: voteLoading ? 0.6 : 1 }}
                   >
                     {votePair.model_a}
                   </button>
                   <button
                     onClick={() => submitVote(votePair.model_b)}
                     disabled={voteLoading}
-                    style={{
-                      flex: 1,
-                      padding: '10px 8px',
-                      borderRadius: 6,
-                      border: '1px solid #c7d2fe',
-                      background: 'white',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: voteLoading ? 'not-allowed' : 'pointer',
-                      color: '#4f46e5',
-                      opacity: voteLoading ? 0.6 : 1
-                    }}
+                    style={{ flex: 1, padding: '10px 8px', borderRadius: 6, border: '1px solid #c7d2fe', background: 'white', fontSize: 12, fontWeight: 600, cursor: voteLoading ? 'not-allowed' : 'pointer', color: '#4f46e5', opacity: voteLoading ? 0.6 : 1 }}
                   >
                     {votePair.model_b}
                   </button>
@@ -580,27 +607,17 @@ function Home() {
                 <button
                   onClick={fetchVotePair}
                   disabled={voteLoading}
-                  style={{
-                    marginTop: 10,
-                    padding: '6px 12px',
-                    fontSize: 11,
-                    color: '#4f46e5',
-                    background: 'none',
-                    border: 'none',
-                    cursor: voteLoading ? 'not-allowed' : 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  style={{ marginTop: 10, padding: '6px 12px', fontSize: 11, color: '#4f46e5', background: 'none', border: 'none', cursor: voteLoading ? 'not-allowed' : 'pointer', textDecoration: 'underline' }}
                 >
                   Skip
                 </button>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#a1a1aa', padding: '10px' }}>
-                Loading vote pair...
-              </div>
+              <div style={{ textAlign: 'center', color: '#a1a1aa', padding: '10px' }}>Loading vote pair...</div>
             )}
           </div>
 
+          {/* This Week */}
           <div style={{ background: '#4f46e5', borderRadius: 10, padding: '18px 18px', color: 'white' }}>
             <h3 style={{ fontSize: 13, fontWeight: 800, marginBottom: 14, letterSpacing: '0.5px', opacity: 0.7, textTransform: 'uppercase' }}>
               This Week
@@ -617,6 +634,7 @@ function Home() {
               </div>
             ))}
           </div>
+
         </div>
       </div>
 
@@ -633,6 +651,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/model/:modelName" element={<ModelPage />} />
+        <Route path="/article/:id" element={<ArticlePage />} />
       </Routes>
     </BrowserRouter>
   );

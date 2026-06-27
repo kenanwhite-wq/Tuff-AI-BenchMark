@@ -3,7 +3,9 @@ CONFIGURATION AND PARSERS
 Single source of truth for all scripts.
 Everything imports from here.
 """
-
+from dotenv import load_dotenv
+import os
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 import pandas as pd
 import sqlite3
 import requests
@@ -381,6 +383,75 @@ def parse_tau2_bench_format(response=None):
     print("  ⚠️ Tau2-bench parser not yet implemented")
     return None
 
+
+def _parse_artificial_analysis_impl(field, response=None):
+    """
+    Fetches and parses the Artificial Analysis LLM models API.
+    field: 'gpqa' | 'hle' | 'livecodebench' | 'mmlu_pro' | 'aime' | 'speed'
+    Benchmark fields are on a 0-1 scale and are multiplied by 100.
+    The 'speed' field uses median_output_tokens_per_second directly.
+    """
+    api_key = os.environ.get('ARTIFICIAL_ANALYSIS_API_KEY')
+    if not api_key:
+        print("  ❌ ARTIFICIAL_ANALYSIS_API_KEY not set")
+        return None
+
+    print(f"  📥 Fetching Artificial Analysis data (field: {field})...")
+
+    try:
+        resp = requests.get(
+            'https://artificialanalysis.ai/api/v2/data/llms/models',
+            headers={'x-api-key': api_key},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        print(f"  ❌ Error fetching Artificial Analysis data: {e}")
+        return None
+
+    models_list = data.get('data', [])
+    if not models_list:
+        print("  ❌ No models found in Artificial Analysis response")
+        return None
+
+    rows = []
+    for model in models_list:
+        model_name = model.get('name') or model.get('model') or model.get('id')
+        if not model_name:
+            continue
+
+        if field == 'speed':
+            score = model.get('median_output_tokens_per_second')
+        else:
+            evaluations = model.get('evaluations', {}) or {}
+            score = evaluations.get(field)
+
+        if score is None:
+            continue
+
+        score = float(score) * 100 if field != 'speed' else float(score)
+        rows.append({'model': model_name, 'score': score})
+
+    if not rows:
+        print(f"  ❌ No models with valid '{field}' scores")
+        return None
+
+    df = pd.DataFrame(rows).sort_values('score', ascending=False).reset_index(drop=True)
+    df['rank'] = range(1, len(df) + 1)
+
+    print(f"  ✅ Parsed {len(df)} models for '{field}'")
+    print(f"  📊 Score range: {df['score'].min():.2f} – {df['score'].max():.2f}")
+    return df
+
+
+def parse_artificial_analysis_factory(field):
+    """Returns a single-argument parser bound to the given evaluation field."""
+    def parser(response=None):
+        return _parse_artificial_analysis_impl(field, response)
+    parser.__name__ = f'parse_aa_{field}'
+    return parser
+
 # ============================================
 # NORMALIZATION FUNCTIONS
 # ============================================
@@ -446,6 +517,51 @@ SOURCES = [
         "category": "coding",
         "parser_name": "parse_swebench_format"
     },
+    {
+        "name": "gpqa_diamond",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis",
+        "category": "reasoning_knowledge",
+        "parser_name": "parse_aa_gpqa",
+        "field": "gpqa",
+        "self_fetch": True,
+    },
+    {
+        "name": "humanity_last_exam",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis",
+        "category": "reasoning_knowledge",
+        "parser_name": "parse_aa_hle",
+        "field": "hle",
+        "self_fetch": True,
+    },
+    {
+        "name": "aime_2025",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "AIME 2025 (Reasoning/Knowledge) via Artificial Analysis",
+        "category": "reasoning_knowledge",
+        "parser_name": "parse_aa_aime",
+        "field": "aime",
+        "self_fetch": True,
+    },
+    {
+        "name": "livecodebench",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "LiveCodeBench (Coding) via Artificial Analysis",
+        "category": "coding",
+        "parser_name": "parse_aa_livecodebench",
+        "field": "livecodebench",
+        "self_fetch": True,
+    },
+    {
+        "name": "artificial_analysis_speed",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "Speed and Cost (Cost/Speed) via Artificial Analysis",
+        "category": "cost_speed",
+        "parser_name": "parse_aa_speed",
+        "field": "speed",
+        "self_fetch": True,
+    },
 ]
 
 # ============================================
@@ -467,108 +583,196 @@ PARSER_MAP = {
     'parse_osworld_format': parse_osworld_format,
     'parse_webarena_format': parse_webarena_format,
     'parse_tau2_bench_format': parse_tau2_bench_format,
+    # Artificial Analysis factory-bound parsers
+    'parse_aa_gpqa': parse_artificial_analysis_factory('gpqa'),
+    'parse_aa_hle': parse_artificial_analysis_factory('hle'),
+    'parse_aa_aime': parse_artificial_analysis_factory('aime'),
+    'parse_aa_livecodebench': parse_artificial_analysis_factory('livecodebench'),
+    'parse_aa_speed': parse_artificial_analysis_factory('speed'),
 }
 
 # ============================================
 # MODEL NAME NORMALIZATION
 # ============================================
 
-def normalize_model_name(name):
+def preclean_model_name(name):
+    """Stage 1: Light string-only pre-cleaning. No AI, no database."""
     if not name or not isinstance(name, str):
         return name
-    
-    original = name.strip()
-    name = name.lower().strip()
 
-    # Strip owner prefixes like 'openai/' or 'qwen/' so normalization is consistent.
+    name = name.strip()
+
+    # Remove HuggingFace org prefix if the part after the slash is >= 3 chars
     if '/' in name:
-        name = name.split('/')[-1]
-    
-    # Explicit mappings - if we recognize it, return clean canonical name
-    mappings = {
-        'GPT-4o':              ['gpt-4o', 'gpt4o', 'gpt-4o-2024'],
-        'GPT-4 Turbo':         ['gpt-4-turbo', 'gpt4-turbo'],
-        'GPT-4.5':             ['gpt-4.5', 'gpt-4.5-preview'],
-        'GPT-5':               ['gpt-5', 'gpt5'],
-        'GPT-3.5 Turbo':       ['gpt-3.5-turbo', 'gpt-35-turbo'],
-        'o1':                  ['openai o1', 'o1-preview', 'o1-mini'],
-        'o3':                  ['openai o3', 'o3-mini'],
-        'o4-mini':             ['o4-mini', 'openai o4-mini'],
+        after_slash = name.split('/', 1)[1]
+        if len(after_slash) >= 3:
+            name = after_slash
 
-        'Claude 3.5 Sonnet':   ['claude-3.5-sonnet', 'claude-3-5-sonnet', 'claude-3.5-sonnet-2024'],
-        'Claude 3.5 Haiku':    ['claude-3.5-haiku', 'claude-3-5-haiku'],
-        'Claude 3 Opus':       ['claude-3-opus', 'claude-3.0-opus'],
-        'Claude 3 Sonnet':     ['claude-3-sonnet', 'claude-3.0-sonnet'],
-        'Claude 3 Haiku':      ['claude-3-haiku', 'claude-3.0-haiku'],
-        'Claude 3.7 Sonnet':   ['claude-3.7-sonnet', 'claude-3-7-sonnet'],
-        'Claude 4 Sonnet':     ['claude-sonnet-4', 'claude-4-sonnet'],
-        'Claude 4 Opus':       ['claude-opus-4', 'claude-4-opus'],
+    # Remove date suffixes at end of string only
+    name = re.sub(r'-\d{4}-\d{2}-\d{2}$', '', name)  # -YYYY-MM-DD
+    name = re.sub(r'-\d{8}$', '', name)                # -YYYYMMDD
+    name = re.sub(r'-\d{6}$', '', name)                # -YYYYMM
 
-        'Gemini 2.5 Pro':      ['gemini-2.5-pro', 'gemini2.5-pro'],
-        'Gemini 2.5 Flash':    ['gemini-2.5-flash', 'gemini2.5-flash'],
-        'Gemini 2.0 Flash':    ['gemini-2.0-flash', 'gemini-2.0-flash-exp'],
-        'Gemini 1.5 Pro':      ['gemini-1.5-pro', 'gemini-1.5-pro-002'],
-        'Gemini 1.5 Flash':    ['gemini-1.5-flash', 'gemini-1.5-flash-002'],
+    # Normalize runs of spaces or underscores to a single space
+    name = re.sub(r'[ _]+', ' ', name)
 
-        'DeepSeek-V3':         ['deepseek-v3', 'deepseek v3'],
-        'DeepSeek-R1':         ['deepseek-r1', 'deepseek r1'],
-        'DeepSeek-V2':         ['deepseek-v2', 'deepseek v2'],
+    return name.strip()
 
-        'Llama 3.1 405B':      ['llama-3.1-405b', 'meta-llama-3.1-405b'],
-        'Llama 3.1 70B':       ['llama-3.1-70b', 'meta-llama-3.1-70b'],
-        'Llama 3.1 8B':        ['llama-3.1-8b', 'meta-llama-3.1-8b'],
-        'Llama 3 70B':         ['llama-3-70b', 'meta-llama-3-70b'],
-        'Llama 3 8B':          ['llama-3-8b', 'meta-llama-3-8b'],
-        'Llama 4 Scout':       ['llama-4-scout', 'llama4-scout'],
-        'Llama 4 Maverick':    ['llama-4-maverick', 'llama4-maverick'],
 
-        'Qwen3':               ['qwen3', 'qwen-3'],
-        'Qwen2.5':             ['qwen2.5', 'qwen-2.5'],
-        'Qwen2':               ['qwen2', 'qwen-2'],
-        'QwQ':                 ['qwq', 'qwq-32b'],
+_OLLAMA_NORMALIZE_PROMPT = (
+    "Given this AI model name from a benchmark leaderboard, return the canonical short name "
+    "that would match the same model across different leaderboard sources. Return ONLY the "
+    "canonical name, nothing else, no punctuation, no explanation.\n\n"
+    "Examples:\n"
+    "gpt-4o-2024-11-20 → GPT-4o\n"
+    "claude-3-5-sonnet-20241022 → Claude 3.5 Sonnet\n"
+    "meta-llama/Llama-3.1-70B-Instruct → Llama 3.1 70B\n"
+    "gemini-2.5-pro-exp-03-25 → Gemini 2.5 Pro\n"
+    "deepseek-v3-0324 → DeepSeek-V3\n"
+    "Qwen/Qwen2.5-72B-Instruct → Qwen2.5 72B\n\n"
+    "Model name: {precleaned_name}\n"
+    "Canonical name:"
+)
 
-        'Mistral Large':       ['mistral-large', 'mistral large'],
-        'Mistral Small':       ['mistral-small', 'mistral small'],
-        'Mixtral 8x7B':        ['mixtral-8x7b', 'mixtral 8x7b'],
-        'Mixtral 8x22B':       ['mixtral-8x22b', 'mixtral 8x22b'],
 
-        'Grok 3':              ['grok-3', 'grok3'],
-        'Grok 2':              ['grok-2', 'grok2'],
+def _ollama_normalize(precleaned_name):
+    """Call Ollama to get a canonical name for one precleaned model name."""
+    prompt = _OLLAMA_NORMALIZE_PROMPT.format(precleaned_name=precleaned_name)
+    try:
+        resp = requests.post(
+            'http://localhost:11434/api/generate',
+            json={
+                'model': 'qwen3:8b',
+                'prompt': prompt,
+                'think': False,
+                'num_predict': 20,
+                'temperature': 0.1,
+                'stream': False,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        text = resp.json().get('response', '').strip()
+        first_line = text.splitlines()[0].strip().rstrip('.,;:!?')
+        return first_line if first_line else None
+    except Exception as e:
+        print(f"  ⚠️ Ollama normalization failed for '{precleaned_name}': {e}")
+        return None
 
-        'Command R+':          ['command-r-plus', 'command r+'],
-        'Command R':           ['command-r', 'command r'],
-    }
 
-    def variant_matches(normalized_name, variant_value):
-        if normalized_name == variant_value:
-            return True
-        if normalized_name.startswith(variant_value + '-') or normalized_name.startswith(variant_value + '_'):
-            return True
-        if normalized_name.startswith(variant_value + ' '):
-            return True
-        if normalized_name.endswith('-' + variant_value) or normalized_name.endswith('_' + variant_value):
-            return True
-        if re.search(rf'(?:^|[\s\-_\/]){re.escape(variant_value)}(?:$|[\s\-_\/])', normalized_name):
-            return True
-        return False
+def find_canonical_match(name):
+    """
+    Check whether `name` is close enough to an already-cached canonical name
+    to be considered the same model.  Uses an 80% word-overlap threshold
+    (case-insensitive) so word-order variants like 'Claude 4.5 Opus' and
+    'Claude Opus 4.5' collapse to whichever was cached first.
+    Returns the matching canonical name if found, otherwise returns name unchanged.
+    """
+    words_new = set(name.lower().split())
+    if not words_new:
+        return name
 
-    # Check mappings first - exact and partial
-    for canonical, variants in mappings.items():
-        for variant in variants:
-            if variant_matches(name, variant):
-                return canonical
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT DISTINCT canonical_name FROM name_normalizations')
+        existing = [row[0] for row in cursor.fetchall() if row[0]]
+        conn.close()
+    except Exception:
+        return name
 
-    # Not in mappings - do light cleanup only, preserve the name
-    # Just remove date suffixes and clean separators, nothing aggressive
-    cleaned = name
-    cleaned = re.sub(r'\s*\([^)]*\)', '', cleaned)
-    cleaned = re.sub(r'[-_](20\d{2}[-_]?(0[1-9]|1[0-2])[-_]?(0[1-9]|[12][0-9]|3[01]))', '', cleaned)
-    cleaned = re.sub(r'[-_]20\d{6}', '', cleaned)
-    cleaned = re.sub(r'[-_]20\d{4}', '', cleaned)
-    cleaned = re.sub(r'[-_]', ' ', cleaned)
-    cleaned = cleaned.strip().title()
+    for candidate in existing:
+        words_candidate = set(candidate.lower().split())
+        if not words_candidate:
+            continue
+        overlap = len(words_new & words_candidate)
+        ratio = overlap / max(len(words_new), len(words_candidate))
+        if ratio >= 0.8:
+            return candidate
 
-    return cleaned if cleaned else original
+    return name
+
+
+def normalize_model_name(name):
+    """
+    Cache-only lookup — safe to call from anywhere, including web requests.
+    Precleans the name, checks the name_normalizations table, and returns
+    the cached canonical name if found, otherwise the precleaned name.
+    Never calls Ollama. For Ollama-backed normalization use
+    bulk_normalize_model_names(), which is called only inside save_snapshot().
+    """
+    if not name or not isinstance(name, str):
+        return name
+
+    precleaned = preclean_model_name(name)
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT canonical_name FROM name_normalizations WHERE raw_name = ?',
+            (precleaned,),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return row[0]
+    except Exception:
+        pass
+
+    return precleaned
+
+
+def bulk_normalize_model_names(names_list):
+    """
+    Normalize a list of raw model names.
+    Checks the DB cache for all names in a single query, then calls Ollama only
+    for those not already cached. Use this instead of calling normalize_model_name
+    in a loop when processing a full leaderboard snapshot.
+    Returns a dict mapping each original name to its canonical name.
+    """
+    if not names_list:
+        return {}
+
+    precleaned = {name: preclean_model_name(name) for name in names_list}
+    unique_precleaned = list(set(precleaned.values()))
+
+    # Batch cache lookup
+    conn = get_connection()
+    placeholders = ','.join('?' * len(unique_precleaned))
+    cursor = conn.cursor()
+    cursor.execute(
+        f'SELECT raw_name, canonical_name FROM name_normalizations WHERE raw_name IN ({placeholders})',
+        unique_precleaned,
+    )
+    cached = {row[0]: row[1] for row in cursor.fetchall()}
+    conn.close()
+
+    # Ollama + fuzzy dedup for uncached names.
+    # Write each result to DB immediately so that later names in the same batch
+    # can match against canonicals resolved earlier in this loop.
+    newly_cached = {}
+    for p in unique_precleaned:
+        if p in cached:
+            continue
+        raw_canonical = _ollama_normalize(p) or p
+        canonical = find_canonical_match(raw_canonical)
+        newly_cached[p] = canonical
+        conn = get_connection()
+        try:
+            conn.execute(
+                'INSERT OR REPLACE INTO name_normalizations (raw_name, canonical_name, created_at) '
+                'VALUES (?, ?, ?)',
+                (p, canonical, datetime.now().isoformat()),
+            )
+            conn.commit()
+        except Exception:
+            pass
+        finally:
+            conn.close()
+
+    canonical_map = {**cached, **newly_cached}
+    return {name: canonical_map.get(precleaned[name], precleaned[name]) for name in names_list}
 
 # ============================================
 # DATABASE UTILITIES
@@ -618,20 +822,24 @@ def get_previous_snapshot(source_name):
 
 def save_snapshot(source_name, df):
     """
-    Save a snapshot with timestamp AND normalized scores.
-    This is the single source of truth for all normalized data.
-    Applies all three normalization methods before saving.
+    Save a snapshot with score normalizations and normalized model names.
+    This is the only place in the codebase that calls Ollama (via
+    bulk_normalize_model_names). Web requests never touch Ollama.
     """
     conn = get_connection()
     df_copy = df.copy()
-    
-    # Apply normalizations before saving
+
+    # Apply score normalizations
     df_copy = apply_all_normalizations(df_copy, 'score')
-    
+
+    # Normalize model names via Ollama (cached; only uncached names hit Ollama)
+    name_map = bulk_normalize_model_names(df_copy['model'].tolist())
+    df_copy['normalized_model'] = df_copy['model'].map(name_map)
+
     # Add metadata
     df_copy['snapshot_timestamp'] = datetime.now().isoformat()
     df_copy['source'] = source_name
-    
+
     # Save to snapshots table
     df_copy.to_sql(SNAPSHOTS_TABLE, conn, if_exists='append', index=False)
     conn.close()
@@ -673,49 +881,43 @@ def get_latest_normalized(source_name=None, limit=100):
 def get_composite_scores(weights=None):
     """
     Calculate composite scores across all sources.
-    Uses model name normalization to match models across different leaderboards.
-    FIXED: Now uses normalized_model for matching.
+    Reads pre-normalized model names directly from the normalized_model column
+    populated by save_snapshot(). Zero Ollama calls — instant for web requests.
     """
     if weights is None:
         active_sources = [s['name'] for s in SOURCES]
         equal_weight = 1.0 / len(active_sources)
         weights = {source: equal_weight for source in active_sources}
-    
+
     conn = get_connection()
-    
-    # Get latest snapshot for each source
+
+    # Read pre-normalized names + scores from each source's latest snapshot
     all_scores = {}
     for source in weights.keys():
-        # Use parameterized query to get most recent timestamp
         cursor = conn.cursor()
-        timestamp_query = f"""
-            SELECT MAX(snapshot_timestamp) as latest_ts
-            FROM {SNAPSHOTS_TABLE}
-            WHERE source = ?
-        """
-        cursor.execute(timestamp_query, (source,))
+        cursor.execute(
+            f"SELECT MAX(snapshot_timestamp) FROM {SNAPSHOTS_TABLE} WHERE source = ?",
+            (source,),
+        )
         result = cursor.fetchone()
-        
         if result is None or result[0] is None:
             continue
-            
         latest_ts = result[0]
-        
         df = pd.read_sql_query(
-            f"""
-            SELECT model, norm_combined as score
-            FROM {SNAPSHOTS_TABLE}
-            WHERE source = ? AND snapshot_timestamp = ?
-            """,
+            f"SELECT model, normalized_model, norm_combined as score "
+            f"FROM {SNAPSHOTS_TABLE} WHERE source = ? AND snapshot_timestamp = ?",
             conn,
-            params=(source, latest_ts)
+            params=(source, latest_ts),
         )
-        
-        if not df.empty:
-            # Apply model name normalization
-            df['normalized_model'] = df['model'].apply(normalize_model_name)
-            all_scores[source] = df
-    
+        if df.empty:
+            continue
+        # Use normalized_model when populated; fall back to raw model name
+        df['normalized_model'] = df['normalized_model'].where(
+            df['normalized_model'].notna() & (df['normalized_model'].str.strip() != ''),
+            df['model'],
+        )
+        all_scores[source] = df
+
     conn.close()
     
     if not all_scores:
@@ -981,6 +1183,7 @@ def init_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             source TEXT,
             model TEXT,
+            normalized_model TEXT,
             score REAL,
             rank INTEGER,
             vendor TEXT,
@@ -994,6 +1197,12 @@ def init_database():
             source_name TEXT
         )
     ''')
+
+    # Migration: add normalized_model to existing snapshots tables
+    try:
+        cursor.execute(f'ALTER TABLE {SNAPSHOTS_TABLE} ADD COLUMN normalized_model TEXT')
+    except Exception:
+        pass  # column already exists
     
     # Feed entries table
     cursor.execute(f'''
@@ -1007,9 +1216,19 @@ def init_database():
             body TEXT,
             status TEXT,
             created_at TEXT,
-            approved_at TEXT
+            approved_at TEXT,
+            run_id TEXT
         )
     ''')
+
+    # Add run_id column to existing feed_entries table if it doesn't have it
+    try:
+        cursor.execute(f"PRAGMA table_info({FEED_TABLE})")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'run_id' not in columns:
+            cursor.execute(f"ALTER TABLE {FEED_TABLE} ADD COLUMN run_id TEXT")
+    except:
+        pass
 
     # News items table
     cursor.execute(f'''
@@ -1102,7 +1321,16 @@ def init_database():
             UNIQUE(comment_id, session_id)
         )
     ''')
-    
+
+    # Model name normalization cache
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS name_normalizations (
+            raw_name TEXT PRIMARY KEY,
+            canonical_name TEXT,
+            created_at TEXT
+        )
+    ''')
+
     conn.commit()
     conn.close()
     print("✅ Database initialized with all tables")

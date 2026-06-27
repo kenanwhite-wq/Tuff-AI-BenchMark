@@ -3821,3 +3821,1111 @@ ERRORS:
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 
 EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 10:04:43
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 3 sources, 14 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 10:04:43
+📁 Database: benchmark.db
+📋 Sources to fetch: 3
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/3
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 10:37:10
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 10:37:10
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 10:46:03
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 10:46:03
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 10:48:26
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 10:48:26
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 10:49:36
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 10:49:36
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 10:54:51
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 10:54:51
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 11:34:17
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 11:34:18
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 15:38:40
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 15:38:40
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Four MTIA Chips in Two Years: Scaling AI Experiences for Bil...
+   🟡 [✅] New model: SAM 3.1: Faster and More Accessible Real-Time Vid...
+   🟢 [✅] How Alta Daily Uses Meta’s Segment Anything to Reimagine the...
+   🟢 [✅] Scaling How We Build and Test Our Most Advanced AI...
+   🟡 [✅] New model: Introducing Muse Spark: Scaling Towards Personal ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 15:46:18
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 15:46:18
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching: https://artificialanalysis.ai/api/v2/data/llms/models
+  ❌ Error 401: {"error":"API key is required"}
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 3/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Showcase: Building ML models that "watch" MMA fights and lab...
+   🟢 [✅] Late Submission of NeurIPS Review [R]...
+   🔴 [✅] Benchmark alert: I silently break training codes or configs ...
+   🟢 [✅] A debugger for RL reward functions that detects reward hacki...
+   🟢 [✅] Built an LLM training framework that actually runs on older ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+❌ ERROR at 2026-06-27 15:59:59: Command '['/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/bin/python', 'hourlyfetcher.py']' timed out after 300 seconds
+
+============================================================
+RUN AT: 2026-06-27 16:16:22
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 16:16:23
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 8/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] If it doesn't make my PP better, I don't want it...
+   🟢 [✅] Showcase: Building ML models that "watch" MMA fights and lab...
+   🟢 [✅] Late Submission of NeurIPS Review [R]...
+   🔴 [✅] Benchmark alert: I silently break training codes or configs ...
+   🟢 [✅] A debugger for RL reward functions that detects reward hacki...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 16:22:39
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 8 sources, 19 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 16:22:40
+📁 Database: benchmark.db
+📋 Sources to fetch: 8
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 8/8
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] If it doesn't make my PP better, I don't want it...
+   🟢 [✅] Showcase: Building ML models that "watch" MMA fights and lab...
+   🟢 [✅] Late Submission of NeurIPS Review [R]...
+   🔴 [✅] Benchmark alert: I silently break training codes or configs ...
+   🟢 [✅] A debugger for RL reward functions that detects reward hacki...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0

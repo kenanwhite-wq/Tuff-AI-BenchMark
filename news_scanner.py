@@ -300,7 +300,7 @@ def persist_news_item(conn, item, classification, status):
     cursor.close()
 
 
-def route_feed_entry(conn, item, classification):
+def route_feed_entry(conn, item, classification, run_id):
     now = datetime.now().isoformat()
     if classification == "BENCHMARK":
         tier = "big"
@@ -322,8 +322,8 @@ def route_feed_entry(conn, item, classification):
 
     cursor = conn.cursor()
     cursor.execute(
-        f"INSERT INTO {FEED_TABLE} (model, source, tier, type, headline, body, status, created_at)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        f"INSERT INTO {FEED_TABLE} (model, source, tier, type, headline, body, status, created_at, run_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             item["title"],
             item["source_name"],
@@ -333,13 +333,14 @@ def route_feed_entry(conn, item, classification):
             item["url"],
             "approved",
             now,
+            run_id,
         ),
     )
     conn.commit()
     cursor.close()
 
 
-def process_source(conn, source, fetcher):
+def process_source(conn, source, fetcher, run_id):
     print(f"\n📥 Fetching source: {source['name']}")
     items = fetcher(source)
     if items is None:
@@ -371,7 +372,7 @@ def process_source(conn, source, fetcher):
 
         if classification != "DISCARD":
             try:
-                route_feed_entry(conn, item, classification)
+                route_feed_entry(conn, item, classification, run_id)
             except Exception as exc:
                 print(f"  ❌ Failed to route feed entry for '{item['title']}': {exc}")
 
@@ -385,6 +386,9 @@ def main():
     print("🔎 NEWS SCANNER")
     print("=" * 60)
     print(f"🕐 Started at: {datetime.now().isoformat()}")
+
+    run_id = f"scanner_{datetime.now().isoformat()}"
+    print(f"📌 Run ID: {run_id}")
 
     init_database()
     conn = get_connection()
@@ -406,7 +410,7 @@ def main():
 
     try:
         for source in RSS_SOURCES:
-            fetched, new_count, seen_count, errors = process_source(conn, source, fetch_rss_items)
+            fetched, new_count, seen_count, errors = process_source(conn, source, fetch_rss_items, run_id)
             summary["sources"][source["name"]]["fetched"] = fetched
             summary["sources"][source["name"]]["new"] = new_count
             summary["sources"][source["name"]]["seen"] = seen_count
@@ -417,7 +421,7 @@ def main():
             summary["total_errors"] += errors
 
         for source in SCRAPE_SOURCES:
-            fetched, new_count, seen_count, errors = process_source(conn, source, fetch_scrape_items)
+            fetched, new_count, seen_count, errors = process_source(conn, source, fetch_scrape_items, run_id)
             summary["sources"][source["name"]]["fetched"] = fetched
             summary["sources"][source["name"]]["new"] = new_count
             summary["sources"][source["name"]]["seen"] = seen_count

@@ -5,7 +5,7 @@
 🚀 Starting Web Interface
 ============================================================
 📁 Database: benchmark.db
-📋 Sources: 3
+📋 Sources: 8
 🌐 Visit: http://localhost:5001
 ============================================================
  * Serving Flask app 'SimpleWeb'
@@ -13,367 +13,70 @@
 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5001
- * Running on http://10.0.0.158:5001
+ * Running on http://10.0.0.151:5001
 [33mPress CTRL+C to quit[0m
  * Restarting with stat
 /Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
   warnings.warn(
  * Debugger is active!
  * Debugger PIN: 490-254-879
-127.0.0.1 - - [26/Jun/2026 16:07:15] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:07:15] "[33mGET /comments/Claude%20Fable%205?tree=1 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:07:15] "[33mGET /comments/Claude%20Fable%205?tree=1 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:07:15] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:07:23] "[33mPOST /comments HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:07:26] "[33mPOST /comments HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:09:10] "[33mGET /comments/Claude%20Fable%205?tree=1 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:09:30] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:09:30] "[33mGET /comments/Claude%20Fable%205?tree=1 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:09:30] "[33mGET /comments/Claude%20Fable%205?tree=1 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:09:30] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:09:35] "[33mPOST /comments HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:10:09] "[33mGET /comments HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:13:51] "[35m[1mPOST /api/comments HTTP/1.1[0m" 201 -
-127.0.0.1 - - [26/Jun/2026 16:13:51] "[33mGET /comments HTTP/1.1[0m" 404 -
-127.0.0.1 - - [26/Jun/2026 16:15:20] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:15:41] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:45] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:45] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:45] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:45] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:51] "OPTIONS /api/comments HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:51] "[35m[1mPOST /api/comments HTTP/1.1[0m" 201 -
-127.0.0.1 - - [26/Jun/2026 16:16:51] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:55] "OPTIONS /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:55] "POST /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:55] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:57] "POST /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:57] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:57] "POST /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:57] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:58] "POST /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:58] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:58] "POST /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:58] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:59] "POST /api/comments/6/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:16:59] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:17:09] "OPTIONS /api/comments HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:17:09] "[35m[1mPOST /api/comments HTTP/1.1[0m" 201 -
-127.0.0.1 - - [26/Jun/2026 16:17:09] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:17:22] "OPTIONS /api/comments/7/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:17:22] "POST /api/comments/7/like HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:17:22] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:55] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:56] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:19:56] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:41] "GET /api/model/Gemini%203.1%20Pro HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:41] "GET /api/comments/Gemini%203.1%20Pro?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:41] "GET /api/comments/Gemini%203.1%20Pro?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:41] "GET /api/model/Gemini%203.1%20Pro HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:43] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:44] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:44] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:58] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:58] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:58] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 16:20:58] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:54] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:55] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:25:55] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:08] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:09] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:09] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:09] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:10] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:10] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:33] "GET /api/model/Claude%204.5%20Opus HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:33] "GET /api/comments/Claude%204.5%20Opus?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:33] "GET /api/comments/Claude%204.5%20Opus?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:33] "GET /api/model/Claude%204.5%20Opus HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:52] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:53] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:26:53] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:20] "GET /api/model/Claude%204.5%20Opus HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:20] "GET /api/comments/Claude%204.5%20Opus?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:20] "GET /api/comments/Claude%204.5%20Opus?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:20] "GET /api/model/Claude%204.5%20Opus HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:21] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:22] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:22] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:22] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:22] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/comments/Claude%20Fable%205?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/model/Claude%20Fable%205 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:24] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:25] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:25] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:25] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:26] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:26] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:26] "GET /api/model/Claude%204.5%20Opus HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:26] "GET /api/comments/Claude%204.5%20Opus?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:26] "GET /api/comments/Claude%204.5%20Opus?tree=1 HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:26] "GET /api/model/Claude%204.5%20Opus HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:27] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:28] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [26/Jun/2026 20:41:28] "GET /api/vote/pair HTTP/1.1" 200 -
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/config.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/config.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/Timer.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/Timer.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/Timer.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/Timer.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
- * Detected change in '/Users/kenan/Documents/Tuff-AI-BenchMark/news_scanner.py', reloading
-✅ Database initialized with all tables
-============================================================
-🚀 Starting Web Interface
-============================================================
-📁 Database: benchmark.db
-📋 Sources: 3
-🌐 Visit: http://localhost:5001
-============================================================
- * Restarting with stat
-/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
-  warnings.warn(
- * Debugger is active!
- * Debugger PIN: 490-254-879
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/sources HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/vote/stats HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/feed HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:13] "GET /api/stats HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:14] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:14] "GET /api/vote/pair HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:15] "GET /api/models HTTP/1.1" 200 -
-127.0.0.1 - - [27/Jun/2026 09:41:15] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:41] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:42] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:42] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:43] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:22:43] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:38] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:39] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:39] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:40] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:41] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:23:41] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:05] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:36] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:37] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:37] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:39] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:40] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:40] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:41] "GET /api/models HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2026 16:29:41] "GET /api/vote/pair HTTP/1.1" 200 -
