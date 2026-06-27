@@ -345,11 +345,68 @@ def parse_livecodebench_format(response=None):
 
 def parse_aider_polyglot_format(response=None):
     """
-    Parser for Aider Polyglot leaderboard
-    Placeholder - to be implemented when data source is found
+    Parser for Aider Polyglot leaderboard (https://aider.chat/docs/leaderboards/).
+    Scrapes the HTML table, extracts model name and percent score (0-100 float).
     """
-    print("  ⚠️ Aider Polyglot parser not yet implemented")
-    return None
+    from bs4 import BeautifulSoup
+
+    if response is None:
+        print("  ❌ Aider Polyglot parser requires an HTTP response")
+        return None
+
+    print("  📥 Parsing Aider Polyglot leaderboard HTML...")
+    try:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        rows = []
+
+        for table in soup.find_all('table'):
+            headers = [th.get_text(strip=True).lower() for th in table.find_all('th')]
+            if not headers:
+                continue
+
+            # Locate model and score columns
+            model_idx = next(
+                (i for i, h in enumerate(headers) if 'model' in h or 'assistant' in h),
+                None,
+            )
+            score_idx = next(
+                (i for i, h in enumerate(headers)
+                 if '%' in h or 'score' in h or 'correct' in h or 'polyglot' in h or 'percent' in h),
+                None,
+            )
+            if model_idx is None or score_idx is None:
+                continue
+
+            for tr in table.find_all('tr')[1:]:
+                cells = tr.find_all(['td', 'th'])
+                if len(cells) <= max(model_idx, score_idx):
+                    continue
+                model_name = cells[model_idx].get_text(strip=True)
+                raw_score = cells[score_idx].get_text(strip=True).replace('%', '').strip()
+                try:
+                    score = float(raw_score)
+                    if 0.0 <= score <= 1.0:
+                        score *= 100
+                    rows.append({'model': model_name, 'score': score})
+                except (ValueError, TypeError):
+                    continue
+
+            if rows:
+                break
+
+        if not rows:
+            print("  ❌ No rows parsed from Aider Polyglot table")
+            return None
+
+        df = pd.DataFrame(rows).sort_values('score', ascending=False).reset_index(drop=True)
+        df['rank'] = range(1, len(df) + 1)
+        print(f"  ✅ Parsed {len(df)} models from Aider Polyglot")
+        print(f"  📊 Score range: {df['score'].min():.1f} – {df['score'].max():.1f}")
+        return df
+
+    except Exception as e:
+        print(f"  ❌ Error parsing Aider Polyglot: {e}")
+        return None
 
 def parse_terminal_bench_format(response=None):
     """
@@ -562,6 +619,38 @@ SOURCES = [
         "field": "speed",
         "self_fetch": True,
     },
+    {
+        "name": "lmaena_code",
+        "url": "https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code",
+        "description": "LMArena Coding Leaderboard",
+        "category": "coding",
+        "parser_name": "parse_lmaena_format",
+    },
+    {
+        "name": "aider_polyglot",
+        "url": "https://aider.chat/docs/leaderboards/",
+        "description": "Aider Polyglot Leaderboard (Coding)",
+        "category": "coding",
+        "parser_name": "parse_aider_polyglot_format",
+    },
+    {
+        "name": "terminal_bench",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "Terminal-Bench Hard (Agentic) via Artificial Analysis",
+        "category": "agentic",
+        "parser_name": "parse_aa_terminal_bench",
+        "self_fetch": True,
+        "weight": 0.5,
+    },
+    {
+        "name": "scicode",
+        "url": "https://artificialanalysis.ai/api/v2/data/llms/models",
+        "description": "SciCode (Coding) via Artificial Analysis",
+        "category": "coding",
+        "parser_name": "parse_aa_scicode",
+        "self_fetch": True,
+        "weight": 1.0,
+    },
 ]
 
 # ============================================
@@ -589,6 +678,8 @@ PARSER_MAP = {
     'parse_aa_aime': parse_artificial_analysis_factory('aime'),
     'parse_aa_livecodebench': parse_artificial_analysis_factory('livecodebench'),
     'parse_aa_speed': parse_artificial_analysis_factory('speed'),
+    'parse_aa_terminal_bench': parse_artificial_analysis_factory('terminalbench_hard'),
+    'parse_aa_scicode': parse_artificial_analysis_factory('scicode'),
 }
 
 # ============================================
@@ -878,16 +969,25 @@ def get_latest_normalized(source_name=None, limit=100):
     conn.close()
     return df
 
-def get_composite_scores(weights=None):
+def get_composite_scores(weights=None, excluded_sources=None):
     """
     Calculate composite scores across all sources.
     Reads pre-normalized model names directly from the normalized_model column
     populated by save_snapshot(). Zero Ollama calls — instant for web requests.
+
+    excluded_sources: optional list of source names to omit from the calculation.
     """
+    excluded = set(excluded_sources or [])
     if weights is None:
-        active_sources = [s['name'] for s in SOURCES]
-        equal_weight = 1.0 / len(active_sources)
+        active_sources = [s['name'] for s in SOURCES if s['name'] not in excluded]
+        equal_weight = 1.0 / len(active_sources) if active_sources else 1.0
         weights = {source: equal_weight for source in active_sources}
+    elif excluded:
+        for src in excluded:
+            weights.pop(src, None)
+        total = sum(weights.values())
+        if total > 0:
+            weights = {k: v / total for k, v in weights.items()}
 
     conn = get_connection()
 

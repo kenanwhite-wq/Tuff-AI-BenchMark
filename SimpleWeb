@@ -480,9 +480,9 @@ def api_delete_comment(comment_id):
 
 @app.route('/api/models')
 def api_models():
-    # get_composite_scores() now reads pre-normalized names from the DB column
-    # populated by save_snapshot() — no Ollama calls, instant response
-    composites = get_composite_scores()
+    include_speed = request.args.get('include_speed', 'false').lower() == 'true'
+    excluded_sources = [] if include_speed else ['artificial_analysis_speed']
+    composites = get_composite_scores(excluded_sources=excluded_sources)
     results = []
     if not composites.empty:
         df = composites.sort_values('composite_score', ascending=False).reset_index(drop=True)

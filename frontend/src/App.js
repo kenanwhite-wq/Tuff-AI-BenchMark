@@ -20,6 +20,7 @@ function Home() {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [priceToggle, setPriceToggle] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [votePair, setVotePair] = useState(null);
   const [voteLoading, setVoteLoading] = useState(false);
@@ -77,6 +78,21 @@ function Home() {
       return false;
     });
   })();
+
+  const handlePriceToggle = async () => {
+    if (toggleLoading) return;
+    const next = !priceToggle;
+    setPriceToggle(next);
+    setToggleLoading(true);
+    try {
+      const res = await API.get(`/models?include_speed=${next}`);
+      setModels(res.data.slice(0, 50));
+    } catch (err) {
+      console.error('Error fetching models with speed toggle:', err);
+    } finally {
+      setToggleLoading(false);
+    }
+  };
 
   const fetchVotePair = async () => {
     try {
@@ -223,11 +239,13 @@ function Home() {
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 12, color: '#71717a' }}>Include cost/speed</span>
             <div
-              onClick={() => setPriceToggle(!priceToggle)}
+              onClick={handlePriceToggle}
               style={{
                 width: 36, height: 20, borderRadius: 10,
                 background: priceToggle ? '#4f46e5' : '#d4d4d8',
-                cursor: 'pointer', position: 'relative', transition: 'background 0.2s'
+                cursor: toggleLoading ? 'not-allowed' : 'pointer',
+                position: 'relative', transition: 'background 0.2s',
+                opacity: toggleLoading ? 0.6 : 1,
               }}
             >
               <div style={{
