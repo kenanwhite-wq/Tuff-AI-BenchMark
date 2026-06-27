@@ -12,6 +12,12 @@ import os
 FETCHER_SCRIPT = "hourlyfetcher.py"
 LOG_FILE = "fetcher.log"
 
+try:
+    import news_scanner
+except Exception as exc:
+    news_scanner = None
+    print(f"⚠️ Could not import news_scanner: {exc}")
+
 def run_fetcher():
     """Run the hourly fetcher"""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -57,7 +63,14 @@ def main():
     # Run once immediately
     print("🚀 Running initial fetch...")
     run_fetcher()
-    
+
+    if news_scanner is not None and hasattr(news_scanner, 'main'):
+        try:
+            print("\n🔎 Running news scanner after initial fetch...")
+            news_scanner.main()
+        except Exception as exc:
+            print(f"❌ news_scanner failed: {exc}")
+
     print("\n🔄 Waiting for next hour...")
     
     while True:
@@ -73,6 +86,13 @@ def main():
         
         # Run the fetcher
         run_fetcher()
+
+        if news_scanner is not None and hasattr(news_scanner, 'main'):
+            try:
+                print("\n🔎 Running news scanner after leaderboard fetch...")
+                news_scanner.main()
+            except Exception as exc:
+                print(f"❌ news_scanner failed: {exc}")
 
 if __name__ == "__main__":
     try:

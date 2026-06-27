@@ -23,6 +23,7 @@ DB_NAME = "benchmark.db"
 # Table names
 SNAPSHOTS_TABLE = "snapshots"
 FEED_TABLE = "feed_entries"
+NEWS_ITEMS_TABLE = "news_items"
 CHANGELOG_TABLE = "changelog"
 COMPOSITE_TABLE = "composite_scores"
 
@@ -1007,6 +1008,21 @@ def init_database():
             status TEXT,
             created_at TEXT,
             approved_at TEXT
+        )
+    ''')
+
+    # News items table
+    cursor.execute(f'''
+        CREATE TABLE IF NOT EXISTS {NEWS_ITEMS_TABLE} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT UNIQUE,
+            title TEXT,
+            summary TEXT,
+            source_name TEXT,
+            source_category TEXT,
+            classification TEXT,
+            created_at TEXT,
+            status TEXT DEFAULT 'active'
         )
     ''')
     
