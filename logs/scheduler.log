@@ -1,2 +1,474 @@
 /Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
   warnings.warn(
+============================================================
+🔄 HOURLY SCHEDULER (Simple)
+============================================================
+📁 Fetcher: hourlyfetcher.py
+📁 Log file: fetcher.log
+============================================================
+Press Ctrl+C to stop
+
+🚀 Running initial fetch...
+
+============================================================
+⏰ Running hourly fetch at 2026-06-27 17:18:33
+============================================================
+✅ Fetcher completed at 17:18:34
+
+🔎 Running news scanner after initial fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-27T17:18:34.814526
+📌 Run ID: scanner_2026-06-27T17:18:34.814536
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+  ⚠️ RSS parse issue for OpenAI Blog: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: HuggingFace Blog
+  ⚠️ RSS parse issue for HuggingFace Blog: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: MarkTechPost
+  ⚠️ RSS parse issue for MarkTechPost: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: The Gradient
+  ⚠️ RSS parse issue for The Gradient: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: arXiv cs.AI
+  ⚠️ RSS parse issue for arXiv cs.AI: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: arXiv cs.CL
+  ⚠️ RSS parse issue for arXiv cs.CL: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: Reddit r/LocalLLaMA
+  ⚠️ RSS parse issue for Reddit r/LocalLLaMA: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: Reddit r/MachineLearning
+  ⚠️ RSS parse issue for Reddit r/MachineLearning: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: Hacker News
+  ⚠️ RSS parse issue for Hacker News: <urlopen error EOF occurred in violation of protocol (_ssl.c:1129)>
+
+📥 Fetching source: Anthropic News
+  ❌ Failed to scrape source Anthropic News: HTTPSConnectionPool(host='www.anthropic.com', port=443): Max retries exceeded with url: /news (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+
+📥 Fetching source: Meta AI Blog
+  ❌ Failed to scrape source Meta AI Blog: HTTPSConnectionPool(host='ai.meta.com', port=443): Max retries exceeded with url: /blog/ (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+
+📥 Fetching source: Mistral News
+  ❌ Failed to scrape source Mistral News: HTTPSConnectionPool(host='mistral.ai', port=443): Max retries exceeded with url: /news/ (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 0
+Total new items:    0
+Total already seen: 0
+Total source errors:3
+
+Source breakdown:
+  - OpenAI Blog: fetched=0 new=0 seen=0 errors=0
+  - HuggingFace Blog: fetched=0 new=0 seen=0 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=0 new=0 seen=0 errors=0
+  - The Gradient: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=0 new=0 seen=0 errors=0
+  - Anthropic News: fetched=0 new=0 seen=0 errors=1
+  - Meta AI Blog: fetched=0 new=0 seen=0 errors=1
+  - Mistral News: fetched=0 new=0 seen=0 errors=1
+
+Classification counts:
+  - BENCHMARK: 9
+  - MODEL_RELEASE: 20
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 49
+  - DISCARD: 49
+============================================================
+
+🔄 Waiting for next hour...
+⏳ Next run at 18:00:00 (2485 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-27 18:30:33
+============================================================
+✅ Fetcher completed at 18:30:38
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-27T18:30:38.858371
+📌 Run ID: scanner_2026-06-27T18:30:38.858541
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 97
+Total new items:    6
+Total already seen: 91
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=3 seen=7 errors=0
+  - Reddit r/MachineLearning: fetched=10 new=2 seen=8 errors=0
+  - Hacker News: fetched=10 new=1 seen=9 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 10
+  - MODEL_RELEASE: 20
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 53
+  - DISCARD: 50
+============================================================
+⏳ Next run at 19:00:00 (825 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-27 20:33:39
+============================================================
+✅ Fetcher completed at 20:33:49
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-27T20:33:49.442922
+📌 Run ID: scanner_2026-06-27T20:33:49.442933
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+  ⚠️ RSS parse issue for Reddit r/LocalLLaMA: <unknown>:2:12: not well-formed (invalid token)
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+  ⚠️ RSS parse issue for Hacker News: <unknown>:2:0: syntax error
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 67
+Total new items:    0
+Total already seen: 67
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=0 new=0 seen=0 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 10
+  - MODEL_RELEASE: 20
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 53
+  - DISCARD: 50
+============================================================
+⏳ Next run at 21:00:00 (1561 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-27 23:28:54
+============================================================
+✅ Fetcher completed at 23:29:00
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-27T23:29:00.081148
+📌 Run ID: scanner_2026-06-27T23:29:00.081154
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 87
+Total new items:    8
+Total already seen: 79
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=1 seen=9 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=10 new=7 seen=3 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 10
+  - MODEL_RELEASE: 21
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 54
+  - DISCARD: 56
+============================================================
+⏳ Next run at 00:00:00 (1833 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-28 02:32:03
+============================================================
+✅ Fetcher completed at 02:32:21
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-28T02:32:21.838157
+📌 Run ID: scanner_2026-06-28T02:32:21.838162
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 87
+Total new items:    6
+Total already seen: 81
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=2 seen=8 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=1 seen=9 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=10 new=3 seen=7 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 10
+  - MODEL_RELEASE: 22
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 56
+  - DISCARD: 59
+============================================================
+⏳ Next run at 03:00:00 (1622 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-28 04:10:11
+============================================================
+✅ Fetcher completed at 04:10:36
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-28T04:10:36.115015
+📌 Run ID: scanner_2026-06-28T04:10:36.115024
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 97
+Total new items:    2
+Total already seen: 95
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=0 seen=10 errors=0
+  - Reddit r/MachineLearning: fetched=10 new=1 seen=9 errors=0
+  - Hacker News: fetched=10 new=1 seen=9 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 10
+  - MODEL_RELEASE: 22
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 57
+  - DISCARD: 60
+============================================================
+⏳ Next run at 05:00:00 (2941 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-28 05:06:11
+============================================================
+✅ Fetcher completed at 05:06:17
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-28T05:06:17.231919
+📌 Run ID: scanner_2026-06-28T05:06:17.231931
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog

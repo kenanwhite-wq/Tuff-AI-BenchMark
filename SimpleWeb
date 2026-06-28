@@ -10,6 +10,10 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import os
+import re
+from functools import wraps
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from config import (
     DB_NAME,
     SOURCES,
@@ -28,12 +32,38 @@ from config import (
     unlike_comment,
     delete_comment,
     init_database,
+    SPEED_WEIGHTS,
+    like_item,
+    unlike_item,
 )
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 init_database()
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=[],
+    storage_uri='memory://'
+)
+
+def require_admin(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        admin_token = os.environ.get('ADMIN_TOKEN')
+        if not admin_token:
+            return jsonify({'error': 'Admin token not configured'}), 500
+        provided = request.headers.get('X-Admin-Token') or request.args.get('admin_token')
+        if provided != admin_token:
+            return jsonify({'error': 'Unauthorized'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+@app.errorhandler(429)
+def rate_limit_handler(e):
+    return jsonify({'error': 'Too many requests. Please slow down.'}), 429
 
 def convert_pandas_types(obj):
     if isinstance(obj, dict):
@@ -396,6 +426,7 @@ def debug():
 
 
 @app.route('/api/approve/<int:entry_id>', methods=['POST'])
+@require_admin
 def api_approve(entry_id):
     try:
         approve_feed_entry(entry_id)
@@ -405,6 +436,7 @@ def api_approve(entry_id):
 
 
 @app.route('/api/reject/<int:entry_id>', methods=['POST'])
+@require_admin
 def api_reject(entry_id):
     conn = sqlite3.connect(DB_NAME)
     conn.execute("DELETE FROM feed_entries WHERE id = ?", (entry_id,))
@@ -427,6 +459,7 @@ def api_get_comments(model_name):
 
 
 @app.route('/api/comments', methods=['POST'])
+@limiter.limit('10 per minute; 50 per hour')
 def api_add_comment():
     """Create a comment for a model."""
     data = request.json or {}
@@ -438,6 +471,10 @@ def api_add_comment():
 
     if not model or not comment:
         return jsonify({'error': 'Model and comment are required'}), 400
+
+    comment = re.sub(r'<[^>]+>', '', comment).strip()
+    if not comment:
+        return jsonify({'error': 'Comment cannot be empty'}), 400
 
     if not session_id:
         session_id = request.headers.get('X-Session-ID')
@@ -454,7 +491,30 @@ def api_add_comment():
     return jsonify(result), 201
 
 
+@app.route('/api/items/like', methods=['POST'])
+def api_like_item():
+    data = request.json or {}
+    item_type = data.get('item_type')
+    item_id = data.get('item_id')
+    session_id = data.get('session_id') or request.headers.get('X-Session-ID') or 'anonymous'
+    if not item_type or item_id is None:
+        return jsonify({'error': 'item_type and item_id required'}), 400
+    return jsonify(like_item(item_type, item_id, session_id))
+
+
+@app.route('/api/items/unlike', methods=['POST'])
+def api_unlike_item():
+    data = request.json or {}
+    item_type = data.get('item_type')
+    item_id = data.get('item_id')
+    session_id = data.get('session_id') or request.headers.get('X-Session-ID') or 'anonymous'
+    if not item_type or item_id is None:
+        return jsonify({'error': 'item_type and item_id required'}), 400
+    return jsonify(unlike_item(item_type, item_id, session_id))
+
+
 @app.route('/api/comments/<int:comment_id>/like', methods=['POST'])
+@limiter.limit('60 per minute')
 def api_like_comment(comment_id):
     """Like a comment."""
     data = request.json or {}
@@ -481,8 +541,7 @@ def api_delete_comment(comment_id):
 @app.route('/api/models')
 def api_models():
     include_speed = request.args.get('include_speed', 'false').lower() == 'true'
-    excluded_sources = [] if include_speed else ['artificial_analysis_speed']
-    composites = get_composite_scores(excluded_sources=excluded_sources)
+    composites = get_composite_scores(weights=dict(SPEED_WEIGHTS) if include_speed else None)
     results = []
     if not composites.empty:
         df = composites.sort_values('composite_score', ascending=False).reset_index(drop=True)
@@ -519,6 +578,18 @@ def api_models():
                             else:
                                 item['raw_names'] = raw_model
                             break
+        # Attach likes counts for all models
+        if results:
+            model_names = [str(item['model']) for item in results]
+            placeholders = ','.join(['?'] * len(model_names))
+            likes_df = pd.read_sql_query(
+                f"SELECT item_id, COUNT(*) as likes FROM item_likes "
+                f"WHERE item_type='model' AND item_id IN ({placeholders}) GROUP BY item_id",
+                conn, params=model_names
+            )
+            likes_map = dict(zip(likes_df['item_id'].astype(str), likes_df['likes'].astype(int)))
+            for item in results:
+                item['likes'] = likes_map.get(str(item['model']), 0)
     finally:
         conn.close()
 
@@ -541,6 +612,7 @@ def api_vote_pair():
 
 
 @app.route('/api/vote/submit', methods=['POST'])
+@limiter.limit('30 per minute; 200 per hour')
 def api_vote_submit():
     """Submit a vote"""
     data = request.json or {}
@@ -730,6 +802,19 @@ def api_model(model_name):
     except Exception:
         feed_entries = []
 
+    # model likes count
+    model_likes = 0
+    try:
+        conn2 = sqlite3.connect(DB_NAME)
+        likes_row = conn2.execute(
+            "SELECT COUNT(*) FROM item_likes WHERE item_type='model' AND item_id=?",
+            (decoded_name,)
+        ).fetchone()
+        model_likes = likes_row[0] if likes_row else 0
+        conn2.close()
+    except Exception:
+        pass
+
     conn.close()
 
     if composite_score is None and community_elo is None and not any(s['has_data'] for s in source_scores):
@@ -748,6 +833,7 @@ def api_model(model_name):
         'source_scores': source_scores,
         'history': history,
         'feed_entries': feed_entries,
+        'likes': model_likes,
         'last_updated': datetime.now().isoformat()
     }))
 
@@ -760,10 +846,17 @@ def api_feed_entry(entry_id):
             "SELECT * FROM feed_entries WHERE id = ? LIMIT 1",
             conn, params=(entry_id,)
         )
-        conn.close()
         if df.empty:
+            conn.close()
             return jsonify({'error': 'Entry not found'}), 404
-        return jsonify(convert_pandas_types(df.to_dict('records')[0]))
+        record = convert_pandas_types(df.to_dict('records')[0])
+        likes_row = conn.execute(
+            "SELECT COUNT(*) FROM item_likes WHERE item_type='article' AND item_id=?",
+            (str(entry_id),)
+        ).fetchone()
+        record['likes'] = likes_row[0] if likes_row else 0
+        conn.close()
+        return jsonify(record)
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)}), 500
@@ -771,17 +864,44 @@ def api_feed_entry(entry_id):
 
 @app.route('/api/feed')
 def api_feed():
+    batch_limit = int(request.args.get('batch_limit', 12))
+    batch_offset = int(request.args.get('batch_offset', 0))
     conn = sqlite3.connect(DB_NAME)
     try:
-        df = pd.read_sql_query(
-            "SELECT * FROM feed_entries WHERE status = 'approved' "
-            "ORDER BY run_id DESC, "
-            "CASE tier WHEN 'big' THEN 1 WHEN 'moderate' THEN 2 WHEN 'small' THEN 3 END ASC, "
-            "created_at DESC LIMIT 50",
+        all_runs = pd.read_sql_query(
+            "SELECT DISTINCT run_id FROM feed_entries WHERE status = 'approved' "
+            "ORDER BY run_id DESC",
             conn
         )
+        if all_runs.empty:
+            conn.close()
+            return jsonify([])
+        run_ids = all_runs['run_id'].tolist()[batch_offset:batch_offset + batch_limit]
+        if not run_ids:
+            conn.close()
+            return jsonify([])
+        placeholders_runs = ','.join(['?'] * len(run_ids))
+        df = pd.read_sql_query(
+            f"SELECT * FROM feed_entries WHERE status = 'approved' AND run_id IN ({placeholders_runs}) "
+            "ORDER BY run_id DESC, "
+            "CASE tier WHEN 'big' THEN 1 WHEN 'moderate' THEN 2 WHEN 'small' THEN 3 END ASC, "
+            "created_at DESC",
+            conn, params=run_ids
+        )
+        records = convert_pandas_types(df.to_dict('records'))
+        if records:
+            ids = [str(r['id']) for r in records]
+            placeholders = ','.join(['?'] * len(ids))
+            likes_df = pd.read_sql_query(
+                f"SELECT item_id, COUNT(*) as likes FROM item_likes "
+                f"WHERE item_type='article' AND item_id IN ({placeholders}) GROUP BY item_id",
+                conn, params=ids
+            )
+            likes_map = dict(zip(likes_df['item_id'].astype(str), likes_df['likes'].astype(int)))
+            for r in records:
+                r['likes'] = likes_map.get(str(r['id']), 0)
         conn.close()
-        return jsonify(convert_pandas_types(df.to_dict('records')))
+        return jsonify(records)
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)})

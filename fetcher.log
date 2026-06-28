@@ -4929,3 +4929,1185 @@ ERRORS:
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 
 EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 17:00:00
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 17:00:00
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] If it doesn't make my PP better, I don't want it...
+   🟢 [✅] Showcase: Building ML models that "watch" MMA fights and lab...
+   🟢 [✅] Late Submission of NeurIPS Review [R]...
+   🔴 [✅] Benchmark alert: I silently break training codes or configs ...
+   🟢 [✅] A debugger for RL reward functions that detects reward hacki...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 17:18:33
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 17:18:34
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ❌ Connection error
+  ⚠️ Skipping lmaena_text - no data
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ❌ Error fetching SWE-bench data: EOF occurred in violation of protocol (_ssl.c:1129)
+  ❌ Parser returned no data
+  ⚠️ Skipping swe_bench - no data
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping gpqa_diamond - no data
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping humanity_last_exam - no data
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping aime_2025 - no data
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping livecodebench - no data
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping artificial_analysis_speed - no data
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ❌ Connection error
+  ⚠️ Skipping lmaena_code - no data
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  ❌ Connection error
+  ⚠️ Skipping aider_polyglot - no data
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping terminal_bench - no data
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ❌ Error fetching Artificial Analysis data: HTTPSConnectionPool(host='artificialanalysis.ai', port=443): Max retries exceeded with url: /api/v2/data/llms/models (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+  ❌ Parser returned no data
+  ⚠️ Skipping scicode - no data
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 1/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] 'Careless People' author claims Meta surveilled her for 12mo...
+   🟢 [✅] If it doesn't make my PP better, I don't want it...
+   🟢 [✅] Showcase: Building ML models that "watch" MMA fights and lab...
+   🟢 [✅] Late Submission of NeurIPS Review [R]...
+   🔴 [✅] Benchmark alert: I silently break training codes or configs ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 18:30:33
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 18:30:33
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1258.33
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] 'Careless People' author claims Meta surveilled her for 12mo...
+   🟢 [✅] If it doesn't make my PP better, I don't want it...
+   🟢 [✅] Showcase: Building ML models that "watch" MMA fights and lab...
+   🟢 [✅] Late Submission of NeurIPS Review [R]...
+   🔴 [✅] Benchmark alert: I silently break training codes or configs ...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 20:33:39
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 20:33:39
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Do we still need to study algorithms now that AI writes most...
+   🔴 [✅] Benchmark alert: Benchmarking Self-Hosted Gemma 2 9B vs. Fro...
+   🟢 [✅] I built a tool to turn your Claude Code sessions into fine-t...
+   🟢 [✅] Model Registry: Torrents for open models using Hugging Face ...
+   🟢 [✅] Will Chinese Open Source Models be the only option soon?...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-27 23:28:54
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-27 23:28:54
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Do we still need to study algorithms now that AI writes most...
+   🔴 [✅] Benchmark alert: Benchmarking Self-Hosted Gemma 2 9B vs. Fro...
+   🟢 [✅] I built a tool to turn your Claude Code sessions into fine-t...
+   🟢 [✅] Model Registry: Torrents for open models using Hugging Face ...
+   🟢 [✅] Will Chinese Open Source Models be the only option soon?...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-28 02:32:03
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-28 02:32:04
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Ford hired AI and sacked humans. It backfired badly...
+   🟡 [✅] New model: Koboldcpp v1.116 released...
+   🟢 [✅] Do we still need to study algorithms now that AI writes most...
+   🔴 [✅] Benchmark alert: Benchmarking Self-Hosted Gemma 2 9B vs. Fro...
+   🟢 [✅] I built a tool to turn your Claude Code sessions into fine-t...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-28 04:10:11
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-28 04:10:12
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1053.65
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] Finally.. my rig is maxed out...
+   🟡 [✅] New model: Liquid AI Ships LFM2.5-230M with llama.cpp, MLX, ...
+   🟢 [✅] Building a Stable Fable 5 Traces Workflow in Colab: Parsing ...
+   🟢 [✅] Ford hired AI and sacked humans. It backfired badly...
+   🟡 [✅] New model: Koboldcpp v1.116 released...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0
+
+============================================================
+RUN AT: 2026-06-28 05:06:11
+============================================================
+🚀 Starting hourly fetcher...
+Python version: 3.9.6 (default, Apr 30 2025, 02:07:17) 
+[Clang 17.0.0 (clang-1700.0.13.5)]
+
+📦 Attempting imports...
+  ✅ requests imported
+  ✅ pandas imported
+  ✅ numpy imported
+  ✅ huggingface_hub imported
+
+📋 Importing config...
+  ✅ config loaded: 12 sources, 21 parsers
+============================================================
+🔄 HOURLY LEADERBOARD FETCHER
+============================================================
+🕐 Started at: 2026-06-28 05:06:12
+📁 Database: benchmark.db
+📋 Sources to fetch: 12
+✅ Database initialized with all tables
+✅ Database initialized
+
+📊 Processing: lmaena_text
+   Description: LMArena Text Leaderboard (Overall)
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=text
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: mmlu_pro
+   Description: MMLU-Pro Leaderboard (Reasoning/Knowledge)
+  📥 Fetching MMLU-Pro leaderboard from Hugging Face...
+  ✅ Read CSV with 262 rows
+  📊 Using columns: model='Models', score='Overall'
+  ✅ Parsed 262 models with valid scores
+  📊 Score range: 10.8 - 91.2
+  ✅ Fetched 262 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: swe_bench
+   Description: SWE-bench Verified Leaderboard (Coding)
+  📥 Fetching SWE-bench Verified leaderboard from Hugging Face...
+  ✅ Fetched 50 models
+  📊 Score range: 3740.0 - 8240.0
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: gpqa_diamond
+   Description: GPQA Diamond (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: gpqa)...
+  ✅ Parsed 511 models for 'gpqa'
+  📊 Score range: 9.80 – 94.10
+  ✅ Fetched 511 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: humanity_last_exam
+   Description: Humanity Last Exam (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: hle)...
+  ✅ Parsed 507 models for 'hle'
+  📊 Score range: 1.20 – 53.30
+  ✅ Fetched 507 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aime_2025
+   Description: AIME 2025 (Reasoning/Knowledge) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: aime)...
+  ✅ Parsed 194 models for 'aime'
+  📊 Score range: 0.00 – 95.67
+  ✅ Fetched 194 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: livecodebench
+   Description: LiveCodeBench (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: livecodebench)...
+  ✅ Parsed 343 models for 'livecodebench'
+  📊 Score range: 0.20 – 91.70
+  ✅ Fetched 343 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: artificial_analysis_speed
+   Description: Speed and Cost (Cost/Speed) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: speed)...
+  ✅ Parsed 542 models for 'speed'
+  📊 Score range: 0.00 – 1029.81
+  ✅ Fetched 542 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: lmaena_code
+   Description: LMArena Coding Leaderboard
+  📥 Fetching: https://api.wulong.dev/arena-ai-leaderboards/v1/leaderboard?name=code
+  ✅ Fetched 50 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: aider_polyglot
+   Description: Aider Polyglot Leaderboard (Coding)
+  📥 Fetching: https://aider.chat/docs/leaderboards/
+  📥 Parsing Aider Polyglot leaderboard HTML...
+  ✅ Parsed 69 models from Aider Polyglot
+  📊 Score range: 3.6 – 88.0
+  ✅ Fetched 69 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: terminal_bench
+   Description: Terminal-Bench Hard (Agentic) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: terminalbench_hard)...
+  ✅ Parsed 423 models for 'terminalbench_hard'
+  📊 Score range: 0.00 – 62.88
+  ✅ Fetched 423 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+📊 Processing: scicode
+   Description: SciCode (Coding) via Artificial Analysis
+  📥 Fetching Artificial Analysis data (field: scicode)...
+  ✅ Parsed 505 models for 'scicode'
+  📊 Score range: 0.00 – 60.20
+  ✅ Fetched 505 models
+  ✅ No changes detected
+  💾 Saved snapshot to snapshots (raw + normalized)
+
+============================================================
+✅ COMPLETE!
+   ✅ Successful: 12/12
+   📁 Database: benchmark.db
+============================================================
+
+📰 Most recent feed entries:
+   🟢 [✅] NagaTranslate: Building a translation and voice pipeline for...
+   🟢 [✅] Finally.. my rig is maxed out...
+   🟡 [✅] New model: Liquid AI Ships LFM2.5-230M with llama.cpp, MLX, ...
+   🟢 [✅] Building a Stable Fable 5 Traces Workflow in Colab: Parsing ...
+   🟢 [✅] Ford hired AI and sacked humans. It backfired badly...
+
+ERRORS:
+/Users/kenan/Documents/Tuff-AI-BenchMark/.venv-1/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+EXIT CODE: 0

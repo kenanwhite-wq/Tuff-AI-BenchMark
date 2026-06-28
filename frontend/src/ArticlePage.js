@@ -6,6 +6,20 @@ import ModelComments from './components/ModelComments';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 const API = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
 
+function getSessionId() {
+  let id = localStorage.getItem('tuff-session-id');
+  if (!id) { id = `s-${Math.random().toString(36).slice(2, 10)}`; localStorage.setItem('tuff-session-id', id); }
+  return id;
+}
+
+function getLikedItems() {
+  try { return new Set(JSON.parse(localStorage.getItem('tuff-liked-items') || '[]')); } catch { return new Set(); }
+}
+
+function saveLikedItems(set) {
+  localStorage.setItem('tuff-liked-items', JSON.stringify([...set]));
+}
+
 const tierConfig = {
   big: { label: 'BIG MOVE', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
   moderate: { label: 'UPDATE', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
@@ -17,6 +31,24 @@ export default function ArticlePage() {
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [likedItems, setLikedItems] = useState(() => getLikedItems());
+  const [likeCount, setLikeCount] = useState(0);
+
+  const toggleLike = async (e) => {
+    e.stopPropagation();
+    const key = `article_${id}`;
+    const liked = likedItems.has(key);
+    try {
+      const res = await API.post(liked ? '/items/unlike' : '/items/like', { item_type: 'article', item_id: String(id), session_id: getSessionId() });
+      const newSet = new Set(likedItems);
+      if (liked) newSet.delete(key); else newSet.add(key);
+      setLikedItems(newSet);
+      saveLikedItems(newSet);
+      setLikeCount(res.data.likes);
+    } catch (err) {
+      console.error('Like error:', err);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -24,6 +56,7 @@ export default function ArticlePage() {
     API.get(`/feed/entry/${id}`)
       .then(res => {
         setArticle(res.data);
+        setLikeCount(res.data.likes || 0);
         setLoading(false);
       })
       .catch(err => {
@@ -115,7 +148,7 @@ export default function ArticlePage() {
             )
           )}
 
-          {/* Source and timestamp */}
+          {/* Source, timestamp, and like */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
             <span style={{
               background: '#ede9fe', color: '#5b21b6',
@@ -124,6 +157,12 @@ export default function ArticlePage() {
               {article.source}
             </span>
             <span style={{ color: '#a1a1aa', fontSize: 12 }}>{article.created_at}</span>
+            <button
+              onClick={toggleLike}
+              style={{ marginLeft: 'auto', background: likedItems.has(`article_${id}`) ? '#fef2f2' : '#f4f4f5', border: `1px solid ${likedItems.has(`article_${id}`) ? '#fecaca' : '#e5e7eb'}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: likedItems.has(`article_${id}`) ? '#ef4444' : '#71717a', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              {likedItems.has(`article_${id}`) ? '❤️' : '🤍'} {likeCount}
+            </button>
           </div>
         </div>
 

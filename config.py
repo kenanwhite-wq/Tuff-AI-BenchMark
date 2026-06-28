@@ -683,6 +683,39 @@ PARSER_MAP = {
 }
 
 # ============================================
+# COMPOSITE SCORE WEIGHTS
+# ============================================
+
+# Category-equal weighting: 25% each across Human Preference, Reasoning,
+# Coding, and Agentic. Cost/Speed is excluded from the base composite
+# (weight 0.0) and only added when the toggle is on.
+DEFAULT_WEIGHTS = {
+    # Human Preference — 25% total
+    'lmaena_text':             0.125,
+    'lmaena_code':             0.125,
+    # Reasoning & Knowledge — 25% total
+    'mmlu_pro':                0.0625,
+    'gpqa_diamond':            0.0625,
+    'humanity_last_exam':      0.0625,
+    'aime_2025':               0.0625,
+    # Coding — 25% total
+    'swe_bench':               0.0625,
+    'livecodebench':           0.0625,
+    'aider_polyglot':          0.0625,
+    'scicode':                 0.0625,
+    # Agentic — 25% total (down-weighted: documented reward-hacking exploit)
+    'terminal_bench':          0.25,
+    # Cost/Speed — excluded from base composite; only included via toggle
+    'artificial_analysis_speed': 0.0,
+}
+
+# When cost/speed is toggled on: scale all base weights to 80% and give
+# speed a 20% share (treating it as a fifth 25%-equivalent category).
+SPEED_WEIGHTS = {src: round(w * 0.8, 6) for src, w in DEFAULT_WEIGHTS.items()
+                 if src != 'artificial_analysis_speed'}
+SPEED_WEIGHTS['artificial_analysis_speed'] = 0.2
+
+# ============================================
 # MODEL NAME NORMALIZATION
 # ============================================
 
@@ -979,9 +1012,11 @@ def get_composite_scores(weights=None, excluded_sources=None):
     """
     excluded = set(excluded_sources or [])
     if weights is None:
-        active_sources = [s['name'] for s in SOURCES if s['name'] not in excluded]
-        equal_weight = 1.0 / len(active_sources) if active_sources else 1.0
-        weights = {source: equal_weight for source in active_sources}
+        # Use category-equal DEFAULT_WEIGHTS; drop zero-weight and excluded sources
+        effective = {src: w for src, w in DEFAULT_WEIGHTS.items()
+                     if w > 0 and src not in excluded}
+        total = sum(effective.values())
+        weights = {src: w / total for src, w in effective.items()} if total else {}
     elif excluded:
         for src in excluded:
             weights.pop(src, None)
@@ -1422,6 +1457,17 @@ def init_database():
         )
     ''')
 
+    # Item likes (articles and models)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS item_likes (
+            item_type TEXT NOT NULL,
+            item_id   TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            created_at TEXT,
+            PRIMARY KEY (item_type, item_id, session_id)
+        )
+    ''')
+
     # Model name normalization cache
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS name_normalizations (
@@ -1548,6 +1594,43 @@ def unlike_comment(comment_id, session_id):
     conn.commit()
     conn.close()
     return {'success': True}
+
+
+def like_item(item_type, item_id, session_id):
+    """Like an article or model once per session."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            'INSERT INTO item_likes (item_type, item_id, session_id, created_at) VALUES (?, ?, ?, ?)',
+            (item_type, str(item_id), session_id, datetime.now().isoformat())
+        )
+        conn.commit()
+    except sqlite3.IntegrityError:
+        pass
+    count = cursor.execute(
+        'SELECT COUNT(*) FROM item_likes WHERE item_type=? AND item_id=?',
+        (item_type, str(item_id))
+    ).fetchone()[0]
+    conn.close()
+    return {'likes': count, 'liked': True}
+
+
+def unlike_item(item_type, item_id, session_id):
+    """Remove a like from an article or model."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        'DELETE FROM item_likes WHERE item_type=? AND item_id=? AND session_id=?',
+        (item_type, str(item_id), session_id)
+    )
+    conn.commit()
+    count = cursor.execute(
+        'SELECT COUNT(*) FROM item_likes WHERE item_type=? AND item_id=?',
+        (item_type, str(item_id))
+    ).fetchone()[0]
+    conn.close()
+    return {'likes': count, 'liked': False}
 
 
 def delete_comment(comment_id, session_id=None):

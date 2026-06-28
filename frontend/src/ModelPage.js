@@ -17,11 +17,43 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:500
 
 const API = axios.create({ baseURL: API_BASE_URL, timeout: 5000 });
 
+function getSessionId() {
+  let id = localStorage.getItem('tuff-session-id');
+  if (!id) { id = `s-${Math.random().toString(36).slice(2, 10)}`; localStorage.setItem('tuff-session-id', id); }
+  return id;
+}
+
+function getLikedItems() {
+  try { return new Set(JSON.parse(localStorage.getItem('tuff-liked-items') || '[]')); } catch { return new Set(); }
+}
+
+function saveLikedItems(set) {
+  localStorage.setItem('tuff-liked-items', JSON.stringify([...set]));
+}
+
 export default function ModelPage() {
   const { modelName } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [likedItems, setLikedItems] = useState(() => getLikedItems());
+  const [likeCount, setLikeCount] = useState(0);
+
+  const toggleLike = async (e) => {
+    e.stopPropagation();
+    const key = `model_${decodeURIComponent(modelName)}`;
+    const liked = likedItems.has(key);
+    try {
+      const res = await API.post(liked ? '/items/unlike' : '/items/like', { item_type: 'model', item_id: decodeURIComponent(modelName), session_id: getSessionId() });
+      const newSet = new Set(likedItems);
+      if (liked) newSet.delete(key); else newSet.add(key);
+      setLikedItems(newSet);
+      saveLikedItems(newSet);
+      setLikeCount(res.data.likes);
+    } catch (err) {
+      console.error('Like error:', err);
+    }
+  };
 
   useEffect(() => {
     if (!modelName) return;
@@ -29,6 +61,7 @@ export default function ModelPage() {
     API.get(`/model/${encodeURIComponent(modelName)}`)
       .then(res => {
         setData(res.data);
+        setLikeCount(res.data.likes || 0);
         setLoading(false);
       })
       .catch(err => {
@@ -62,6 +95,12 @@ export default function ModelPage() {
       <div style={{ background: '#4f46e5', color: 'white', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: 20, cursor: 'pointer' }}>←</button>
         <div style={{ fontWeight: 800, fontSize: 18 }}>{decodeURIComponent(modelName)}</div>
+        <button
+          onClick={toggleLike}
+          style={{ background: likedItems.has(`model_${decodeURIComponent(modelName)}`) ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          {likedItems.has(`model_${decodeURIComponent(modelName)}`) ? '❤️' : '🤍'} {likeCount}
+        </button>
         <div style={{ marginLeft: 'auto', opacity: 0.9 }}>Last updated: {data.last_updated || 'N/A'}</div>
       </div>
 
