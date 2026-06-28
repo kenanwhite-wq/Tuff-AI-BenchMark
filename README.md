@@ -1,5 +1,5 @@
 # Tuff AI Benchmark
-The open-source AI benchmark aggregator. Tracks model performance across 12 benchmark sources, updated hourly, with a live news feed covering everything happening in AI.
+AI benchmark aggregator. Tracks model performance across 12 benchmark sources, updated hourly, with a live news feed covering everything happening in AI.
 
 🌐 aibenchmark.com — live site (coming soon)
 
@@ -9,7 +9,7 @@ Most AI benchmark sites either run their own evaluations (expensive, slow) or sh
 
 Alongside the composite score, an automated news scanner watches 13 AI news sources hourly, classifies each item using a locally-running AI model (no data leaves your server), and surfaces what's actually worth knowing — model releases, benchmark alerts, research papers, and industry news — in a tiered feed.
 
-Everything is open source, the methodology is public, and the weights are visible. No black-box scoring.
+the methodology is public, and the weights are visible. No black-box scoring.
 
 
 Features
@@ -237,7 +237,9 @@ Hugging Face — MMLU-Pro dataset hosting
 
 
 License
-MIT — see LICENSE
+Source code is published for transparency and audit purposes.  
+© 2026 Kenan White — All rights reserved.  
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution terms.
 
 
 
