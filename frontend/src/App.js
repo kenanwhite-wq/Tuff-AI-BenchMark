@@ -56,6 +56,12 @@ function Home() {
     general_news: true,
     benchmark: true,
   });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   const mapFeedItemToFilter = (item) => {
     if (!item.type) return null;
@@ -237,7 +243,7 @@ function Home() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13 }}>
             <span style={{ opacity: 0.8 }}>🟢 Live</span>
-            <span style={{ opacity: 0.7 }}>Updated {stats.last_update ? new Date(stats.last_update).toLocaleTimeString() : 'N/A'}</span>
+            {!isMobile && <span style={{ opacity: 0.7 }}>Updated {stats.last_update ? new Date(stats.last_update).toLocaleTimeString() : 'N/A'}</span>}
           </div>
         </div>
       </div>
@@ -262,7 +268,7 @@ function Home() {
             {searchQuery && <button onClick={() => setSearchQuery('')} style={{ border: 'none', background: '#e5e7eb', color: '#374151', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>Clear</button>}
           </div>
 
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
             {filteredModels.length === 0 ? (
               <div style={{ color: '#71717a', fontSize: 13, padding: '18px 0' }}>No models match "{searchQuery}".</div>
             ) : filteredModels.map((m, i) => (
@@ -290,7 +296,7 @@ function Home() {
 
       {/* Main content — full width bg, centered grid */}
       <div style={{ background: '#f7f6ff' }}>
-        <div style={{ maxWidth: MAX_WIDTH, margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
+        <div style={{ maxWidth: isMobile ? 'none' : MAX_WIDTH, margin: '0 auto', padding: isMobile ? '16px' : '24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: isMobile ? 16 : 24 }}>
 
           {/* Feed */}
           <div>
@@ -299,6 +305,31 @@ function Home() {
               <span style={{ background: '#ef4444', color: 'white', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.5px' }}>LIVE</span>
             </div>
 
+            {isMobile && (
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 12, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+                {[
+                  { key: 'leaderboard', label: '☰ Leaderboard' },
+                  { key: 'model_release', label: '🤖 Models' },
+                  { key: 'research_paper', label: '📄 Papers' },
+                  { key: 'general_news', label: '📰 News' },
+                  { key: 'benchmark', label: '⚠️ Benchmarks' },
+                ].map(filter => (
+                  <button key={filter.key}
+                    onClick={() => setFilters({ ...filters, [filter.key]: !filters[filter.key] })}
+                    style={{
+                      flexShrink: 0, padding: '6px 14px', borderRadius: 20,
+                      border: `1px solid ${filters[filter.key] ? '#4f46e5' : '#d4d4d8'}`,
+                      background: filters[filter.key] ? '#4f46e5' : 'white',
+                      color: filters[filter.key] ? 'white' : '#52525b',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}>
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {feed.length === 0 ? (
               <div style={{ background: 'white', padding: 30, borderRadius: 10, textAlign: 'center', color: '#a1a1aa' }}>No feed entries yet. Changes will appear here when detected.</div>
             ) : (
@@ -306,7 +337,7 @@ function Home() {
                 {[...filteredFeed, ...expandedFeed.filter(item => { const k = mapFeedItemToFilter(item); return k && filters[k]; })].map(item => {
                   const tier = tierConfig[item.tier] || tierConfig.moderate;
                   return (
-                    <div key={item.id} style={{ background: 'white', border: `1px solid ${tier.border}`, borderRadius: 10, padding: '16px 18px', display: 'flex', gap: 14, transition: 'box-shadow 0.15s', cursor: 'pointer' }}
+                    <div key={item.id} style={{ background: 'white', border: `1px solid ${tier.border}`, borderRadius: 10, padding: isMobile ? '12px 14px' : '16px 18px', display: 'flex', gap: 14, transition: 'box-shadow 0.15s', cursor: 'pointer' }}
                       onClick={() => navigate(`/article/${item.id}`)}
                       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(79,70,229,0.08)'}
                       onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
@@ -316,8 +347,14 @@ function Home() {
                         </div>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, marginBottom: 6, color: '#18181b' }}>{item.headline}</div>
-                        <div style={{ fontSize: 13, color: '#52525b', lineHeight: 1.5, marginBottom: 8 }}>{item.body}</div>
+                        <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, lineHeight: 1.3, marginBottom: 6, color: '#18181b', ...(isMobile && { wordBreak: 'break-word', overflowWrap: 'anywhere' }) }}>{item.headline}</div>
+                        <div style={{ fontSize: 13, color: '#52525b', lineHeight: 1.5, marginBottom: 8, ...(isMobile && { wordBreak: 'break-word', overflowWrap: 'anywhere' }) }}>
+                          {item.body && item.body.startsWith('http') ? (() => {
+                            let domain = '';
+                            try { domain = new URL(item.body).hostname.replace(/^www\./, ''); } catch { domain = item.body; }
+                            return <a href={item.body} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>{domain} · Read article →</a>;
+                          })() : item.body}
+                        </div>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 11 }}>
                           <span style={{ background: '#ede9fe', color: '#5b21b6', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>{sources.find(s => s.name === item.source)?.label || item.source}</span>
                           <span style={{ color: '#a1a1aa' }}>{item.created_at}</span>
@@ -347,7 +384,7 @@ function Home() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Feed Filters */}
-            <div style={{ background: 'white', borderRadius: 10, border: '1px solid #e5e7fb', padding: '18px' }}>
+            {!isMobile && <div style={{ background: 'white', borderRadius: 10, border: '1px solid #e5e7fb', padding: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.5px', color: '#52525b', textTransform: 'uppercase' }}>Feed Filters</h3>
                 <button onClick={() => { const allActive = Object.values(filters).every(v => v); setFilters(Object.keys(filters).reduce((acc, key) => { acc[key] = !allActive; return acc; }, {})); }} style={{ fontSize: 11, color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
@@ -368,7 +405,7 @@ function Home() {
                   </label>
                 ))}
               </div>
-            </div>
+            </div>}
 
             {/* Community Sentiment */}
             <div style={{ background: 'white', borderRadius: 10, border: '1px solid #e5e7fb', padding: '18px' }}>

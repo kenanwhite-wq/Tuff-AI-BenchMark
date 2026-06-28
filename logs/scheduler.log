@@ -472,3 +472,266 @@ Classification counts:
 ✅ Database initialized with all tables
 
 📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 87
+Total new items:    1
+Total already seen: 86
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=1 seen=9 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=10 new=0 seen=10 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 10
+  - MODEL_RELEASE: 22
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 57
+  - DISCARD: 61
+============================================================
+⏳ Next run at 06:00:00 (3203 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-28 07:49:33
+============================================================
+✅ Fetcher completed at 07:49:38
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-28T07:49:38.198695
+📌 Run ID: scanner_2026-06-28T07:49:38.198700
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 87
+Total new items:    5
+Total already seen: 82
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=3 seen=7 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=10 new=2 seen=8 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 11
+  - MODEL_RELEASE: 23
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 58
+  - DISCARD: 63
+============================================================
+⏳ Next run at 08:00:00 (602 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-28 08:00:14
+============================================================
+✅ Fetcher completed at 08:00:18
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-28T08:00:18.986318
+📌 Run ID: scanner_2026-06-28T08:00:18.986333
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 97
+Total new items:    3
+Total already seen: 94
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=0 seen=10 errors=0
+  - Reddit r/MachineLearning: fetched=10 new=1 seen=9 errors=0
+  - Hacker News: fetched=10 new=2 seen=8 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
+
+Classification counts:
+  - BENCHMARK: 11
+  - MODEL_RELEASE: 23
+  - PRICE_CHANGE: 0
+  - RESEARCH_PAPER: 21
+  - GENERAL_NEWS: 59
+  - DISCARD: 65
+============================================================
+⏳ Next run at 09:00:00 (3561 seconds from now)
+
+============================================================
+⏰ Running hourly fetch at 2026-06-28 09:00:00
+============================================================
+✅ Fetcher completed at 09:00:15
+
+🔎 Running news scanner after leaderboard fetch...
+============================================================
+🔎 NEWS SCANNER
+============================================================
+🕐 Started at: 2026-06-28T09:00:15.240227
+📌 Run ID: scanner_2026-06-28T09:00:15.240240
+✅ Database initialized with all tables
+
+📥 Fetching source: OpenAI Blog
+
+📥 Fetching source: HuggingFace Blog
+
+📥 Fetching source: DeepMind Blog
+  ⚠️ RSS parse issue for DeepMind Blog: <unknown>:24:68: not well-formed (invalid token)
+
+📥 Fetching source: MarkTechPost
+
+📥 Fetching source: The Gradient
+
+📥 Fetching source: arXiv cs.AI
+
+📥 Fetching source: arXiv cs.CL
+
+📥 Fetching source: Reddit r/LocalLLaMA
+
+📥 Fetching source: Reddit r/MachineLearning
+
+📥 Fetching source: Hacker News
+
+📥 Fetching source: Anthropic News
+
+📥 Fetching source: Meta AI Blog
+
+📥 Fetching source: Mistral News
+
+============================================================
+🧾 News scanner summary
+Total items fetched: 87
+Total new items:    9
+Total already seen: 78
+Total source errors:0
+
+Source breakdown:
+  - OpenAI Blog: fetched=10 new=0 seen=10 errors=0
+  - HuggingFace Blog: fetched=10 new=0 seen=10 errors=0
+  - DeepMind Blog: fetched=0 new=0 seen=0 errors=0
+  - MarkTechPost: fetched=10 new=0 seen=10 errors=0
+  - The Gradient: fetched=10 new=0 seen=10 errors=0
+  - arXiv cs.AI: fetched=0 new=0 seen=0 errors=0
+  - arXiv cs.CL: fetched=0 new=0 seen=0 errors=0
+  - Reddit r/LocalLLaMA: fetched=10 new=4 seen=6 errors=0
+  - Reddit r/MachineLearning: fetched=0 new=0 seen=0 errors=0
+  - Hacker News: fetched=10 new=5 seen=5 errors=0
+  - Anthropic News: fetched=7 new=0 seen=7 errors=0
+  - Meta AI Blog: fetched=10 new=0 seen=10 errors=0
+  - Mistral News: fetched=10 new=0 seen=10 errors=0
