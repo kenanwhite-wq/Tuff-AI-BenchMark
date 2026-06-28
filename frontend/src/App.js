@@ -434,6 +434,8 @@ function Home() {
           Data updates hourly · Methodology is public · Not affiliated with any lab
           {' · '}
           <Link to="/methodology" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Methodology &amp; Sources →</Link>
+          {' · '}
+          <Link to="/privacy" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Privacy Policy →</Link>
         </div>
       </div>
 
@@ -494,11 +496,87 @@ function MethodologyPage() {
               ))}
             </tbody>
           </table>
+        <div style={{ marginTop: 32 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>Data Attribution</h2>
+            <p style={{ fontSize: 13, color: '#52525b', lineHeight: 1.7 }}>
+              Benchmark scores are sourced from the organizations listed above and are reproduced for informational and comparative purposes. This site conducts no original evaluations. LMArena data courtesy of the LMSYS Chatbot Arena project. MMLU-Pro data courtesy of TIGER-Lab. SWE-bench data courtesy of Princeton NLP. Evaluation data for GPQA Diamond, HLE, AIME 2025, LiveCodeBench, Terminal-Bench, and SciCode courtesy of Artificial Analysis. Aider Polyglot data courtesy of Paul Gauthier / aider.chat.
+            </p>
+          </div>
         </div>
       </div>
 
       <div style={{ textAlign: 'center', padding: '16px 24px 32px', fontSize: 12, color: '#a1a1aa' }}>
         Data updates hourly · Methodology is public · Not affiliated with any lab
+        {' · '}
+        <Link to="/methodology" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Methodology &amp; Sources →</Link>
+        {' · '}
+        <Link to="/privacy" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Privacy Policy →</Link>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyPage() {
+  const navigate = useNavigate();
+  return (
+    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f7f6ff', minHeight: '100vh', color: '#18181b' }}>
+      <div style={{ background: '#4f46e5', color: 'white', height: 52, position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: MAX_WIDTH, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: 20, cursor: 'pointer', padding: 0 }}>←</button>
+          <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.5px' }}>TUFF AI</span>
+          <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px' }}>BENCHMARK</span>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 860, margin: '32px auto', padding: '0 24px' }}>
+        <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7fb', padding: '28px 32px' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Privacy Policy</h1>
+          <p style={{ fontSize: 12, color: '#a1a1aa', marginBottom: 28 }}>Last updated: June 2026</p>
+
+          {[
+            {
+              heading: 'What we collect',
+              body: 'We collect no personal information. Comments and votes are associated with an anonymous session ID stored in your browser — we never ask for your name, email, or account. The session ID is used only to prevent duplicate votes and allow you to delete your own comments.',
+            },
+            {
+              heading: "What we don't collect",
+              body: 'We do not use tracking cookies, advertising pixels, or analytics that identify individual users. We do not sell, share, or monetize any data about visitors.',
+            },
+            {
+              heading: 'Data from benchmark sources',
+              body: 'All model scores displayed on this site are sourced from publicly available leaderboards and APIs. We do not conduct original evaluations. Sources are listed on the Methodology page.',
+            },
+            {
+              heading: 'News content',
+              body: 'Article headlines and links are sourced from public RSS feeds and news sites. We store only the title and URL of articles, not their full content.',
+            },
+            {
+              heading: 'Comment moderation',
+              body: 'Comments are reviewed by a locally-running open-source AI model (Qwen3 8B via Ollama). Comment text is not sent to any third-party service for moderation.',
+            },
+            {
+              heading: 'Third-party services',
+              body: 'This site uses Cloudflare for DNS and routing. Cloudflare may log IP addresses per their own privacy policy. We use no other third-party services that receive user data.',
+            },
+            {
+              heading: 'Contact',
+              body: 'This site is independently operated. For questions or concerns, open an issue on our GitHub repository.',
+            },
+          ].map((section, i) => (
+            <div key={i} style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: '#18181b' }}>{section.heading}</h2>
+              <p style={{ fontSize: 13, color: '#52525b', lineHeight: 1.7, margin: 0 }}>{section.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center', padding: '16px 24px 32px', fontSize: 12, color: '#a1a1aa' }}>
+        Data updates hourly · Methodology is public · Not affiliated with any lab
+        {' · '}
+        <Link to="/methodology" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Methodology &amp; Sources →</Link>
+        {' · '}
+        <Link to="/privacy" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Privacy Policy →</Link>
       </div>
     </div>
   );
@@ -512,6 +590,7 @@ export default function App() {
         <Route path="/model/:modelName" element={<ModelPage />} />
         <Route path="/article/:id" element={<ArticlePage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
       </Routes>
     </BrowserRouter>
   );
