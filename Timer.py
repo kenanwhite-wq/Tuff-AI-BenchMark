@@ -85,6 +85,9 @@ def run_news_scanner():
 
 
 def main():
+    from llm_client import validate_llm_config
+    validate_llm_config()
+
     print("=" * 60)
     print("🔄 HOURLY SCHEDULER")
     print("=" * 60)

@@ -1,6 +1,6 @@
 """News scanner for AI benchmark tracking.
-Fetches items from RSS and scraped news sources, classifies them with Ollama,
-and routes approved items into the feed_entries table.
+Fetches items from RSS and scraped news sources, classifies them with the
+configured LLM provider, and routes approved items into the feed_entries table.
 """
 
 import sys
@@ -40,8 +40,6 @@ except Exception as e:
     print(f"❌ Could not import config: {e}")
     raise
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen3:8b"
 MAX_ITEMS_PER_SOURCE = 10
 
 SOURCE_LIMITS = {
@@ -63,7 +61,7 @@ AI_KEYWORDS = [
     'dataset', 'eval', 'leaderboard', 'arxiv', 'paper', 'research',
 ]
 
-OLLAMA_PROMPT_TEMPLATE = (
+CLASSIFY_PROMPT_TEMPLATE = (
     "You are a strict content filter for an AI model benchmark tracking website.\n"
     "Your audience cares ONLY about: AI model releases, AI benchmark results, \n"
     "AI research papers, AI company news, and AI safety/alignment topics.\n\n"
@@ -135,22 +133,6 @@ def truncate_summary(value, length=300):
     return text[:length].rstrip() + "..."
 
 
-def extract_ollama_output(payload):
-    if isinstance(payload, dict):
-        if "results" in payload and isinstance(payload["results"], list):
-            for result in payload["results"]:
-                if isinstance(result, dict):
-                    for key in ("output", "generated", "text", "response", "content"):
-                        value = result.get(key)
-                        if value:
-                            return value
-        for key in ("output", "generated", "text", "response", "content"):
-            value = payload.get(key)
-            if value:
-                return value
-    return None
-
-
 def parse_classification(raw_response):
     if not raw_response:
         return "DISCARD"
@@ -176,40 +158,22 @@ def parse_classification(raw_response):
 
 
 def create_prompt(title, summary):
-    return OLLAMA_PROMPT_TEMPLATE.format(title=title, summary=summary)
+    return CLASSIFY_PROMPT_TEMPLATE.format(title=title, summary=summary)
 
 
 def classify_item(title, summary):
+    from llm_client import generate_text
+
     prompt = create_prompt(title, truncate_summary(summary, 300))
-    payload = {
-        'model': OLLAMA_MODEL,
-        'prompt': prompt,
-        'stream': False,
-        'think': False,
-        'options': {
-            'temperature': 0.1,
-            'num_predict': 20
-        }
-    }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
-        response.raise_for_status()
-        data = None
-        try:
-            data = response.json()
-        except ValueError:
-            pass
-
-        raw_output = extract_ollama_output(data) if data is not None else None
+        raw_output = generate_text(prompt, temperature=0.1, max_tokens=20, timeout=60)
         if raw_output is None:
-            raw_output = response.text
+            print(f"  ❌ LLM request failed for '{title[:50]}'")
+            return None
 
         classification = parse_classification(raw_output)
         return classification
-    except requests.exceptions.RequestException as exc:
-        print(f"  ❌ Ollama request failed for '{title[:50]}': {exc}")
-        return None
     except Exception as exc:
         print(f"  ❌ Error classifying '{title[:50]}': {exc}")
         return None
@@ -413,7 +377,7 @@ def process_source(conn, source, fetcher, run_id, tracked_models=None):
     new_count = 0
     seen_count = 0
     prefilter_skipped = 0
-    ollama_discarded = 0
+    llm_discarded = 0
     published = 0
 
     for item in items:
@@ -449,7 +413,7 @@ def process_source(conn, source, fetcher, run_id, tracked_models=None):
             continue
 
         if classification == "DISCARD":
-            ollama_discarded += 1
+            llm_discarded += 1
         else:
             published += 1
             try:
@@ -461,10 +425,13 @@ def process_source(conn, source, fetcher, run_id, tracked_models=None):
 
         new_count += 1
 
-    return fetched, new_count, seen_count, 0, prefilter_skipped, ollama_discarded, published
+    return fetched, new_count, seen_count, 0, prefilter_skipped, llm_discarded, published
 
 
 def main():
+    from llm_client import validate_llm_config
+    validate_llm_config()
+
     print("=" * 60)
     print("🔎 NEWS SCANNER")
     print("=" * 60)
@@ -486,7 +453,7 @@ def main():
         "total_seen": 0,
         "total_errors": 0,
         "total_prefilter_skipped": 0,
-        "total_ollama_discarded": 0,
+        "total_llm_discarded": 0,
         "total_published": 0,
     }
 
@@ -508,7 +475,7 @@ def main():
             summary["total_seen"] += seen_count
             summary["total_errors"] += errors
             summary["total_prefilter_skipped"] += pre
-            summary["total_ollama_discarded"] += disc
+            summary["total_llm_discarded"] += disc
             summary["total_published"] += pub
 
         for source in SCRAPE_SOURCES:
@@ -522,7 +489,7 @@ def main():
             summary["total_seen"] += seen_count
             summary["total_errors"] += errors
             summary["total_prefilter_skipped"] += pre
-            summary["total_ollama_discarded"] += disc
+            summary["total_llm_discarded"] += disc
             summary["total_published"] += pub
     except Exception as exc:
         print(f"❌ News scanner errored: {exc}")
@@ -549,7 +516,7 @@ def main():
         print(f"  - {category}: {count}")
 
     print(f"\n📊 Pre-filter skipped: {summary['total_prefilter_skipped']} non-AI items")
-    print(f"📊 Ollama discarded: {summary['total_ollama_discarded']} items")
+    print(f"📊 LLM discarded: {summary['total_llm_discarded']} items")
     print(f"📊 Published to feed: {summary['total_published']} items")
     print("=" * 60)
 

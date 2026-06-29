@@ -756,7 +756,7 @@ def preclean_model_name(name):
     return name.strip()
 
 
-_OLLAMA_NORMALIZE_PROMPT = (
+_NORMALIZE_PROMPT = (
     "Given this AI model name from a benchmark leaderboard, return the canonical short name "
     "that would match the same model across different leaderboard sources. Return ONLY the "
     "canonical name, nothing else, no punctuation, no explanation.\n\n"
@@ -772,28 +772,19 @@ _OLLAMA_NORMALIZE_PROMPT = (
 )
 
 
-def _ollama_normalize(precleaned_name):
-    """Call Ollama to get a canonical name for one precleaned model name."""
-    prompt = _OLLAMA_NORMALIZE_PROMPT.format(precleaned_name=precleaned_name)
+def _llm_normalize(precleaned_name):
+    """Call the configured LLM provider to get a canonical name for one precleaned model name."""
+    from llm_client import generate_text
+
+    prompt = _NORMALIZE_PROMPT.format(precleaned_name=precleaned_name)
     try:
-        resp = requests.post(
-            'http://localhost:11434/api/generate',
-            json={
-                'model': 'qwen3:8b',
-                'prompt': prompt,
-                'think': False,
-                'num_predict': 20,
-                'temperature': 0.1,
-                'stream': False,
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        text = resp.json().get('response', '').strip()
+        text = generate_text(prompt, temperature=0.1, max_tokens=20, timeout=30)
+        if not text:
+            return None
         first_line = text.splitlines()[0].strip().rstrip('.,;:!?')
         return first_line if first_line else None
     except Exception as e:
-        print(f"  ⚠️ Ollama normalization failed for '{precleaned_name}': {e}")
+        print(f"  ⚠️ LLM normalization failed for '{precleaned_name}': {e}")
         return None
 
 
@@ -835,7 +826,7 @@ def normalize_model_name(name):
     Cache-only lookup — safe to call from anywhere, including web requests.
     Precleans the name, checks the name_normalizations table, and returns
     the cached canonical name if found, otherwise the precleaned name.
-    Never calls Ollama. For Ollama-backed normalization use
+    Never calls the LLM. For LLM-backed normalization use
     bulk_normalize_model_names(), which is called only inside save_snapshot().
     """
     if not name or not isinstance(name, str):
@@ -863,7 +854,7 @@ def normalize_model_name(name):
 def bulk_normalize_model_names(names_list):
     """
     Normalize a list of raw model names.
-    Checks the DB cache for all names in a single query, then calls Ollama only
+    Checks the DB cache for all names in a single query, then calls the LLM only
     for those not already cached. Use this instead of calling normalize_model_name
     in a loop when processing a full leaderboard snapshot.
     Returns a dict mapping each original name to its canonical name.
@@ -885,14 +876,14 @@ def bulk_normalize_model_names(names_list):
     cached = {row[0]: row[1] for row in cursor.fetchall()}
     conn.close()
 
-    # Ollama + fuzzy dedup for uncached names.
+    # LLM + fuzzy dedup for uncached names.
     # Write each result to DB immediately so that later names in the same batch
     # can match against canonicals resolved earlier in this loop.
     newly_cached = {}
     for p in unique_precleaned:
         if p in cached:
             continue
-        raw_canonical = _ollama_normalize(p) or p
+        raw_canonical = _llm_normalize(p) or p
         canonical = find_canonical_match(raw_canonical)
         newly_cached[p] = canonical
         conn = get_connection()
@@ -960,8 +951,8 @@ def get_previous_snapshot(source_name):
 def save_snapshot(source_name, df):
     """
     Save a snapshot with score normalizations and normalized model names.
-    This is the only place in the codebase that calls Ollama (via
-    bulk_normalize_model_names). Web requests never touch Ollama.
+    This is the only place in the codebase that calls the LLM for normalization (via
+    bulk_normalize_model_names). Web requests never trigger normalization LLM calls.
     """
     conn = get_connection()
     df_copy = df.copy()
@@ -969,7 +960,7 @@ def save_snapshot(source_name, df):
     # Apply score normalizations
     df_copy = apply_all_normalizations(df_copy, 'score')
 
-    # Normalize model names via Ollama (cached; only uncached names hit Ollama)
+    # Normalize model names via LLM (cached; only uncached names hit the LLM)
     name_map = bulk_normalize_model_names(df_copy['model'].tolist())
     df_copy['normalized_model'] = df_copy['model'].map(name_map)
 
@@ -1019,7 +1010,7 @@ def get_composite_scores(weights=None, excluded_sources=None):
     """
     Calculate composite scores across all sources.
     Reads pre-normalized model names directly from the normalized_model column
-    populated by save_snapshot(). Zero Ollama calls — instant for web requests.
+    populated by save_snapshot(). Zero LLM calls — instant for web requests.
 
     excluded_sources: optional list of source names to omit from the calculation.
     """

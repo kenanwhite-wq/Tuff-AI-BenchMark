@@ -1,0 +1,14 @@
+[Unit]
+Description=Tuff AI Benchmark API
+After=network.target
+
+[Service]
+User=deploy
+WorkingDirectory=/opt/tuffai
+EnvironmentFile=/opt/tuffai/.env
+ExecStart=/opt/tuffai/.venv/bin/gunicorn -w 2 -b 127.0.0.1:5001 wsgi:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

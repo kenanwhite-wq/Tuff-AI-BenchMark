@@ -856,7 +856,8 @@ def api_entry_summary(entry_id):
             conn.close()
             return jsonify({'summary': item['ai_summary'], 'cached': True})
 
-        import requests as req
+        from llm_client import generate_text
+
         headline = item['headline'] or ''
         body = item['body'] or ''
         source = item['source'] or ''
@@ -874,19 +875,7 @@ def api_entry_summary(entry_id):
             "Summary:"
         )
 
-        response = req.post(
-            'http://localhost:11434/api/generate',
-            json={
-                'model': 'qwen3:8b',
-                'prompt': prompt,
-                'stream': False,
-                'think': False,
-                'options': {'temperature': 0.3, 'num_predict': 120},
-            },
-            timeout=30,
-        )
-
-        summary = response.json().get('response', '').strip()
+        summary = generate_text(prompt, temperature=0.3, max_tokens=120, timeout=30) or ''
 
         for prefix in ['Summary:', "Here is a summary:", "Here's a summary:"]:
             if summary.startswith(prefix):
