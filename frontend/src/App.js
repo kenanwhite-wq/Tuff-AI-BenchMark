@@ -4,6 +4,7 @@ import './App.css';
 import { BrowserRouter, Routes, Route, useNavigate, Link } from 'react-router-dom';
 import ModelPage from './ModelPage';
 import ArticlePage from './ArticlePage';
+import DataPage from './DataPage';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
@@ -28,6 +29,15 @@ const API = axios.create({
   timeout: 30000,
 });
 
+function formatRelativeTime(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+  return date.toLocaleDateString();
+}
+
 function Home() {
   const navigate = useNavigate();
   const [models, setModels] = useState([]);
@@ -38,10 +48,12 @@ function Home() {
   const [priceToggle, setPriceToggle] = useState(false);
   const [toggleLoading, setToggleLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [feedSearchQuery, setFeedSearchQuery] = useState('');
   const [votePair, setVotePair] = useState(null);
   const [voteLoading, setVoteLoading] = useState(false);
   const [communityRankings, setCommunityRankings] = useState([]);
   const [voteStats, setVoteStats] = useState({});
+  const [weeklyStats, setWeeklyStats] = useState({});
   const [showRankings, setShowRankings] = useState(false);
   const [likedItems, setLikedItems] = useState(() => getLikedItems());
   const [likeCounts, setLikeCounts] = useState({});
@@ -63,6 +75,51 @@ function Home() {
     return () => window.removeEventListener('resize', handler);
   }, []);
 
+  const [lastVisit, setLastVisit] = useState(null);
+  const [newCount, setNewCount] = useState(0);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('aibenchmark_last_visit');
+    if (stored) {
+      setLastVisit(new Date(stored));
+    }
+    localStorage.setItem('aibenchmark_last_visit', new Date().toISOString());
+  }, []);
+
+  const [watchlist, setWatchlist] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('aibenchmark_watchlist') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [watchlistOnly, setWatchlistOnly] = useState(false);
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const toggleWatchlist = (modelName) => {
+    setWatchlist(prev => {
+      const next = prev.includes(modelName)
+        ? prev.filter(m => m !== modelName)
+        : [...prev, modelName];
+      localStorage.setItem('aibenchmark_watchlist', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const q = feedSearchQuery.trim();
+    if (!q) { setSearchResults(null); setSearchLoading(false); return; }
+    setSearchLoading(true);
+    const timer = setTimeout(() => {
+      API.get(`/feed?q=${encodeURIComponent(q)}`)
+        .then(res => setSearchResults(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearchLoading(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [feedSearchQuery]);
+
   const mapFeedItemToFilter = (item) => {
     if (!item.type) return null;
     if (item.type === 'rank_change' || item.type === 'score_shift' || item.type === 'new_model') return 'leaderboard';
@@ -81,6 +138,23 @@ function Home() {
     const filterKey = mapFeedItemToFilter(item);
     return filterKey && filters[filterKey];
   });
+
+  const sortedFeed = [...filteredFeed].sort((a, b) => {
+    const aIsNew = lastVisit && new Date(a.created_at) > lastVisit;
+    const bIsNew = lastVisit && new Date(b.created_at) > lastVisit;
+    if (aIsNew && !bIsNew) return -1;
+    if (!aIsNew && bIsNew) return 1;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  const displayFeed = watchlistOnly && watchlist.length > 0
+    ? sortedFeed.filter(item =>
+        watchlist.some(w =>
+          (item.model && item.model.toLowerCase().includes(w.toLowerCase())) ||
+          (item.headline && item.headline.toLowerCase().includes(w.toLowerCase()))
+        )
+      )
+    : sortedFeed;
 
   const filteredModels = (() => {
     const q = searchQuery.trim().toLowerCase();
@@ -193,11 +267,21 @@ function Home() {
       API.get('/sources'),
       API.get('/stats'),
       API.get('/vote/stats'),
+      API.get('/stats/weekly'),
     ])
-      .then(([modelsRes, feedRes, sourcesRes, statsRes, voteStatsRes]) => {
+      .then(([modelsRes, feedRes, sourcesRes, statsRes, voteStatsRes, weeklyRes]) => {
         setModels(modelsRes.data.slice(0, 50));
         const feedItems = feedRes.data.filter(item => item.status === 'approved');
         setFeed(feedItems);
+        const stored = localStorage.getItem('aibenchmark_last_visit');
+        if (stored) {
+          const lastVisitDate = new Date(stored);
+          const newItems = feedRes.data.filter(item =>
+            item.status === 'approved' &&
+            new Date(item.created_at) > lastVisitDate
+          );
+          setNewCount(newItems.length);
+        }
         const counts = {};
         feedItems.forEach(item => { counts[`article_${item.id}`] = item.likes || 0; });
         modelsRes.data.slice(0, 50).forEach(m => { counts[`model_${m.model}`] = m.likes || 0; });
@@ -205,6 +289,7 @@ function Home() {
         setSources(sourcesRes.data);
         setStats(statsRes.data);
         setVoteStats(voteStatsRes.data);
+        setWeeklyStats(weeklyRes.data);
         setLoading(false);
         fetchVotePair();
       })
@@ -272,10 +357,17 @@ function Home() {
             {filteredModels.length === 0 ? (
               <div style={{ color: '#71717a', fontSize: 13, padding: '18px 0' }}>No models match "{searchQuery}".</div>
             ) : filteredModels.map((m, i) => (
-              <div key={m.model} style={{ minWidth: 130, background: i === 0 ? '#4f46e5' : '#f7f6ff', border: `1px solid ${i === 0 ? '#4f46e5' : '#e5e7fb'}`, borderRadius: 10, padding: '12px 14px', flexShrink: 0, transition: 'transform 0.15s', cursor: 'pointer' }}
+              <div key={m.model} style={{ position: 'relative', minWidth: 130, background: i === 0 ? '#4f46e5' : '#f7f6ff', border: `1px solid ${i === 0 ? '#4f46e5' : '#e5e7fb'}`, borderRadius: 10, padding: '12px 14px', flexShrink: 0, transition: 'transform 0.15s', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                 onClick={() => navigate(`/model/${encodeURIComponent(m.model)}`)}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleWatchlist(m.model); }}
+                  style={{ position: 'absolute', top: 6, right: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1, opacity: watchlist.includes(m.model) ? 1 : 0.3, color: i === 0 ? 'white' : '#f59e0b', padding: 2 }}
+                  title={watchlist.includes(m.model) ? 'Remove from watchlist' : 'Add to watchlist'}
+                >
+                  {watchlist.includes(m.model) ? '★' : '☆'}
+                </button>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: i === 0 ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{m.rank || i + 1}</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: i === 0 ? 'white' : '#18181b', marginBottom: 6, lineHeight: 1.2 }}>{m.model}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: i === 0 ? 'white' : '#4f46e5', lineHeight: 1 }}>{m.composite_score ? m.composite_score.toFixed(1) : '—'}</div>
@@ -300,9 +392,24 @@ function Home() {
 
           {/* Feed */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <h2 style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.3px' }}>What changed</h2>
               <span style={{ background: '#ef4444', color: 'white', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.5px' }}>LIVE</span>
+            </div>
+            {newCount > 0 && lastVisit && (
+              <div style={{ background: '#eeedfe', border: '1px solid #c7d2fe', borderRadius: 8, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13 }}>
+                <span style={{ color: '#4f46e5', fontWeight: 600 }}>
+                  ✦ {newCount} new {newCount === 1 ? 'item' : 'items'} since your last visit
+                </span>
+                <span style={{ color: '#7c7ac9', fontSize: 11 }}>
+                  Last visited {formatRelativeTime(lastVisit)}
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <input type="text" value={feedSearchQuery} onChange={e => setFeedSearchQuery(e.target.value)} placeholder="Search feed..." style={{ flex: 1, borderRadius: 10, border: '1px solid #d4d4d8', padding: '9px 12px', fontSize: 13, outline: 'none', background: 'white' }} />
+              {feedSearchQuery && <button onClick={() => setFeedSearchQuery('')} style={{ border: 'none', background: '#e5e7eb', color: '#374151', padding: '9px 12px', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Clear</button>}
             </div>
 
             {isMobile && (
@@ -332,12 +439,26 @@ function Home() {
 
             {feed.length === 0 ? (
               <div style={{ background: 'white', padding: 30, borderRadius: 10, textAlign: 'center', color: '#a1a1aa' }}>No feed entries yet. Changes will appear here when detected.</div>
+            ) : watchlistOnly && watchlist.length > 0 && displayFeed.length === 0 ? (
+              <div style={{ background: 'white', padding: 30, borderRadius: 10, textAlign: 'center', color: '#a1a1aa' }}>
+                <div style={{ fontSize: 30, marginBottom: 8 }}>★</div>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>No recent activity for your watchlist</div>
+                <div style={{ fontSize: 12 }}>Changes to {watchlist.join(', ')} will appear here when detected</div>
+              </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {[...filteredFeed, ...expandedFeed.filter(item => { const k = mapFeedItemToFilter(item); return k && filters[k]; })].map(item => {
+                {searchLoading && <div style={{ background: 'white', padding: 16, borderRadius: 10, textAlign: 'center', color: '#a1a1aa', fontSize: 13 }}>Searching all articles...</div>}
+                {feedSearchQuery.trim() && !searchLoading && searchResults !== null && searchResults.filter(item => { const k = mapFeedItemToFilter(item); return k && filters[k]; }).length === 0 && (
+                  <div style={{ background: 'white', padding: 20, borderRadius: 10, textAlign: 'center', color: '#a1a1aa', fontSize: 13 }}>No articles match "{feedSearchQuery}"</div>
+                )}
+                {(feedSearchQuery.trim()
+                  ? (searchResults || []).filter(item => { const k = mapFeedItemToFilter(item); return k && filters[k]; })
+                  : [...displayFeed, ...expandedFeed.filter(item => { const k = mapFeedItemToFilter(item); return k && filters[k]; })]
+                ).map(item => {
                   const tier = tierConfig[item.tier] || tierConfig.moderate;
+                  const isNew = lastVisit && new Date(item.created_at) > lastVisit;
                   return (
-                    <div key={item.id} style={{ background: 'white', border: `1px solid ${tier.border}`, borderRadius: 10, padding: isMobile ? '12px 14px' : '16px 18px', display: 'flex', gap: 14, transition: 'box-shadow 0.15s', cursor: 'pointer' }}
+                    <div key={item.id} style={{ background: 'white', border: `1px solid ${isNew ? '#a5b4fc' : tier.border}`, borderRadius: 10, padding: isMobile ? '12px 14px' : '16px 18px', display: 'flex', gap: 14, transition: 'box-shadow 0.15s', cursor: 'pointer' }}
                       onClick={() => navigate(`/article/${item.id}`)}
                       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(79,70,229,0.08)'}
                       onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
@@ -345,6 +466,11 @@ function Home() {
                         <div style={{ background: tier.bg, border: `1.5px solid ${tier.border}`, borderRadius: 6, padding: '4px 6px', textAlign: 'center' }}>
                           <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '1px', color: tier.color, lineHeight: 1 }}>{tier.label}</div>
                         </div>
+                        {isNew && (
+                          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5px', color: 'white', background: '#22c55e', borderRadius: 4, padding: '2px 5px', marginTop: 4, textAlign: 'center', animation: 'pulse 2s infinite' }}>
+                            NEW
+                          </div>
+                        )}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, lineHeight: 1.3, marginBottom: 6, color: '#18181b', ...(isMobile && { wordBreak: 'break-word', overflowWrap: 'anywhere' }) }}>{item.headline}</div>
@@ -355,8 +481,16 @@ function Home() {
                             return <a href={item.body} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>{domain} · Read article →</a>;
                           })() : item.body}
                         </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 11 }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 11, flexWrap: 'wrap' }}>
                           <span style={{ background: '#ede9fe', color: '#5b21b6', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>{sources.find(s => s.name === item.source)?.label || item.source}</span>
+                          {item.type === 'news_scanner' && item.model && (
+                            <span
+                              onClick={e => { e.stopPropagation(); navigate(`/model/${encodeURIComponent(item.model)}`); }}
+                              style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 4, fontWeight: 600, cursor: 'pointer' }}
+                            >
+                              {item.model}
+                            </span>
+                          )}
                           <span style={{ color: '#a1a1aa' }}>{item.created_at}</span>
                           <button
                             onClick={(e) => toggleLike('article', item.id, e)}
@@ -369,7 +503,7 @@ function Home() {
                     </div>
                   );
                 })}
-                {expandHasMore && (
+                {!feedSearchQuery.trim() && expandHasMore && (
                   <div style={{ textAlign: 'center', paddingTop: 6, paddingBottom: 2 }}>
                     <button onClick={handleExpand} disabled={expandLoading} style={{ background: 'none', border: '1px solid #e5e7fb', borderRadius: 8, padding: '7px 20px', fontSize: 12, fontWeight: 600, color: '#71717a', cursor: expandLoading ? 'not-allowed' : 'pointer', opacity: expandLoading ? 0.6 : 1 }}>
                       {expandLoading ? 'Loading...' : 'Expand ▼'}
@@ -406,6 +540,54 @@ function Home() {
                 ))}
               </div>
             </div>}
+
+            {/* Watchlist */}
+            {!isMobile && (
+              <div style={{ background: 'white', borderRadius: 10, border: '1px solid #e5e7fb', padding: '18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.5px', color: '#52525b', textTransform: 'uppercase' }}>★ Watchlist</h3>
+                  {watchlist.length > 0 && (
+                    <button
+                      onClick={() => setWatchlistOnly(!watchlistOnly)}
+                      style={{ fontSize: 11, color: watchlistOnly ? 'white' : '#4f46e5', background: watchlistOnly ? '#4f46e5' : 'none', border: '1px solid #4f46e5', borderRadius: 6, padding: '2px 10px', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      {watchlistOnly ? 'All feed' : 'Filter feed'}
+                    </button>
+                  )}
+                </div>
+                {watchlist.length === 0 ? (
+                  <div style={{ fontSize: 12, color: '#a1a1aa', textAlign: 'center', padding: '12px 0' }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>☆</div>
+                    Star models on the leaderboard to track them here
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {watchlist.map(modelName => {
+                      const modelData = models.find(m => m.model === modelName);
+                      return (
+                        <div key={modelName} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f4f4f5', fontSize: 13 }}>
+                          <span onClick={() => navigate(`/model/${encodeURIComponent(modelName)}`)} style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', color: '#18181b', fontWeight: 500 }}>
+                            {modelName}
+                          </span>
+                          {modelData && (
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#4f46e5' }}>{modelData.composite_score?.toFixed(1)}</span>
+                          )}
+                          <button onClick={() => toggleWatchlist(modelName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', fontSize: 14, padding: 0, lineHeight: 1 }}>★</button>
+                        </div>
+                      );
+                    })}
+                    <a
+                      href={`/feed.rss?models=${encodeURIComponent(watchlist.join(','))}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: 11, color: '#4f46e5', textDecoration: 'none', display: 'block', marginTop: 8, textAlign: 'center' }}
+                    >
+                      Subscribe to watchlist RSS ↗
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Community Sentiment */}
             <div style={{ background: 'white', borderRadius: 10, border: '1px solid #e5e7fb', padding: '18px' }}>
@@ -449,10 +631,11 @@ function Home() {
             <div style={{ background: '#4f46e5', borderRadius: 10, padding: '18px', color: 'white' }}>
               <h3 style={{ fontSize: 13, fontWeight: 800, marginBottom: 14, letterSpacing: '0.5px', opacity: 0.7, textTransform: 'uppercase' }}>This Week</h3>
               {[
-                ['Rank changes', '14'],
-                ['New models', '2'],
-                ['Sources live', `${sources.length}/12`],
-                ['Feed entries', stats.feed_entries || '0'],
+                ['Rank changes', weeklyStats.rank_changes ?? '—'],
+                ['New models', weeklyStats.new_models ?? '—'],
+                ['News items', weeklyStats.news_items ?? '—'],
+                ['Sources live', weeklyStats.sources_live != null ? `${weeklyStats.sources_live}/${weeklyStats.total_sources}` : '—'],
+                ['Feed entries', weeklyStats.feed_entries ?? '—'],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 13 }}>
                   <span style={{ opacity: 0.75 }}>{label}</span>
@@ -473,6 +656,10 @@ function Home() {
           <Link to="/methodology" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Methodology &amp; Sources →</Link>
           {' · '}
           <Link to="/privacy" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Privacy Policy →</Link>
+          {' · '}
+          <a href="/feed.rss" style={{ color: '#a1a1aa', textDecoration: 'none' }}>RSS ↗</a>
+          {' · '}
+          <Link to="/data" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Data Explorer →</Link>
         </div>
       </div>
 
@@ -628,6 +815,7 @@ export default function App() {
         <Route path="/article/:id" element={<ArticlePage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/data" element={<DataPage />} />
       </Routes>
     </BrowserRouter>
   );

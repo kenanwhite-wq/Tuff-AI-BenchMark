@@ -39,12 +39,27 @@ export default function ModelPage() {
   const [likedItems, setLikedItems] = useState(() => getLikedItems());
   const [likeCount, setLikeCount] = useState(0);
 
+  const [watchlist, setWatchlist] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('aibenchmark_watchlist') || '[]');
+    } catch { return []; }
+  });
+  const decodedModelName = decodeURIComponent(modelName);
+  const isWatched = watchlist.includes(decodedModelName);
+  const toggleWatchlist = () => {
+    const next = isWatched
+      ? watchlist.filter(m => m !== decodedModelName)
+      : [...watchlist, decodedModelName];
+    localStorage.setItem('aibenchmark_watchlist', JSON.stringify(next));
+    setWatchlist(next);
+  };
+
   const toggleLike = async (e) => {
     e.stopPropagation();
-    const key = `model_${decodeURIComponent(modelName)}`;
+    const key = `model_${decodedModelName}`;
     const liked = likedItems.has(key);
     try {
-      const res = await API.post(liked ? '/items/unlike' : '/items/like', { item_type: 'model', item_id: decodeURIComponent(modelName), session_id: getSessionId() });
+      const res = await API.post(liked ? '/items/unlike' : '/items/like', { item_type: 'model', item_id: decodedModelName, session_id: getSessionId() });
       const newSet = new Set(likedItems);
       if (liked) newSet.delete(key); else newSet.add(key);
       setLikedItems(newSet);
@@ -94,12 +109,18 @@ export default function ModelPage() {
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f7f6ff', minHeight: '100vh', color: '#18181b' }}>
       <div style={{ background: '#4f46e5', color: 'white', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: 20, cursor: 'pointer' }}>←</button>
-        <div style={{ fontWeight: 800, fontSize: 18 }}>{decodeURIComponent(modelName)}</div>
+        <div style={{ fontWeight: 800, fontSize: 18 }}>{decodedModelName}</div>
         <button
           onClick={toggleLike}
-          style={{ background: likedItems.has(`model_${decodeURIComponent(modelName)}`) ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}
+          style={{ background: likedItems.has(`model_${decodedModelName}`) ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}
         >
-          {likedItems.has(`model_${decodeURIComponent(modelName)}`) ? '❤️' : '🤍'} {likeCount}
+          {likedItems.has(`model_${decodedModelName}`) ? '❤️' : '🤍'} {likeCount}
+        </button>
+        <button
+          onClick={toggleWatchlist}
+          style={{ background: isWatched ? '#fef3c7' : 'rgba(255,255,255,0.15)', border: `1px solid ${isWatched ? '#f59e0b' : 'transparent'}`, borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: isWatched ? '#92400e' : 'white', display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          {isWatched ? '★ Watching' : '☆ Watch'}
         </button>
         <div style={{ marginLeft: 'auto', opacity: 0.9 }}>Last updated: {data.last_updated || 'N/A'}</div>
       </div>

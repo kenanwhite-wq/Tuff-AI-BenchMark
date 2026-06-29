@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 680 680" role="img">
+<title>Tuff AI Benchmark</title>
+
+<!-- Spokes -->
+<line stroke="#c7c5e8" stroke-width="1" x1="340" y1="340" x2="340" y2="100"/>
+<line stroke="#c7c5e8" stroke-width="1" x1="340" y1="340" x2="547.8" y2="220"/>
+<line stroke="#c7c5e8" stroke-width="1" x1="340" y1="340" x2="547.8" y2="460"/>
+<line stroke="#c7c5e8" stroke-width="1" x1="340" y1="340" x2="340" y2="580"/>
+<line stroke="#c7c5e8" stroke-width="1" x1="340" y1="340" x2="132.2" y2="460"/>
+<line stroke="#c7c5e8" stroke-width="1" x1="340" y1="340" x2="132.2" y2="220"/>
+
+<!-- Grid rings -->
+<polygon fill="none" stroke="#c7c5e8" stroke-width="1" points="340,292 381.6,316 381.6,364 340,388 298.4,364 298.4,316"/>
+<polygon fill="none" stroke="#c7c5e8" stroke-width="1" points="340,244 423.1,292 423.1,388 340,436 256.9,388 256.9,292"/>
+<polygon fill="none" stroke="#c7c5e8" stroke-width="1" points="340,196 464.7,268 464.7,412 340,484 215.3,412 215.3,268"/>
+<polygon fill="none" stroke="#c7c5e8" stroke-width="1" points="340,148 506.2,244 506.2,436 340,532 173.8,436 173.8,244"/>
+<polygon fill="none" stroke="#9491cc" stroke-width="1.5" points="340,100 547.8,220 547.8,460 340,580 132.2,460 132.2,220"/>
+
+<!-- Indigo blob — diagonal symmetry (top-right/bottom-left axis), real-data proportions, 80% opacity -->
+<polygon
+  fill="rgba(79,70,229,0.80)"
+  stroke="#4f46e5"
+  stroke-width="2.5"
+  stroke-linejoin="round"
+  points="340.0,130.0 452.6,275.0 521.9,445.0 340.0,520.0 205.8,417.5 184.1,250.0"/>
+
+<!-- Vertex dots -->
+<circle fill="#3730a3" cx="340.0" cy="130.0" r="5.5"/>
+<circle fill="#3730a3" cx="452.6" cy="275.0" r="5.5"/>
+<circle fill="#3730a3" cx="521.9" cy="445.0" r="5.5"/>
+<circle fill="#3730a3" cx="340.0" cy="520.0" r="5.5"/>
+<circle fill="#3730a3" cx="205.8" cy="417.5" r="5.5"/>
+<circle fill="#3730a3" cx="184.1" cy="250.0" r="5.5"/>
+
+<!-- Center dot -->
+<circle fill="#312e81" cx="340" cy="340" r="4"/>
+
+</svg>

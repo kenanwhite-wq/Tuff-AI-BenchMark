@@ -33,6 +33,23 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(true);
   const [likedItems, setLikedItems] = useState(() => getLikedItems());
   const [likeCount, setLikeCount] = useState(0);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryLoaded, setSummaryLoaded] = useState(false);
+
+  const fetchSummary = async () => {
+    if (summaryLoaded || summaryLoading) return;
+    setSummaryLoading(true);
+    try {
+      const res = await API.get(`/feed/entry/${id}/summary`);
+      setSummary(res.data.summary);
+    } catch (err) {
+      console.error('Summary error:', err);
+    } finally {
+      setSummaryLoading(false);
+      setSummaryLoaded(true);
+    }
+  };
 
   const toggleLike = async (e) => {
     e.stopPropagation();
@@ -58,6 +75,7 @@ export default function ArticlePage() {
         setArticle(res.data);
         setLikeCount(res.data.likes || 0);
         setLoading(false);
+        fetchSummary();
       })
       .catch(err => {
         console.error('Error fetching article:', err);
@@ -164,6 +182,33 @@ export default function ArticlePage() {
               {likedItems.has(`article_${id}`) ? '❤️' : '🤍'} {likeCount}
             </button>
           </div>
+        </div>
+
+        {/* AI Summary */}
+        <div style={{
+          background: '#eeedfe',
+          border: '1px solid #c7d2fe',
+          borderRadius: 10,
+          padding: '16px 20px',
+          marginBottom: 24,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#4f46e5' }}>✦ AI Summary</span>
+            <span style={{
+              fontSize: 10, color: '#7c7ac9',
+              background: 'rgba(79,70,229,0.1)',
+              padding: '2px 8px', borderRadius: 10,
+            }}>
+              Generated locally · Qwen3 8B
+            </span>
+          </div>
+          {summaryLoading ? (
+            <div style={{ color: '#7c7ac9', fontSize: 13, fontStyle: 'italic' }}>Generating summary...</div>
+          ) : summary ? (
+            <p style={{ fontSize: 14, color: '#3730a3', lineHeight: 1.7, margin: 0 }}>{summary}</p>
+          ) : summaryLoaded ? (
+            <div style={{ color: '#7c7ac9', fontSize: 13, fontStyle: 'italic' }}>Summary not available for this item.</div>
+          ) : null}
         </div>
 
         {/* Comments section */}

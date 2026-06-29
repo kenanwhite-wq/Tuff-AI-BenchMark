@@ -838,6 +838,76 @@ def api_model(model_name):
     }))
 
 
+@app.route('/api/feed/entry/<int:entry_id>/summary')
+def api_entry_summary(entry_id):
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        row = pd.read_sql_query(
+            'SELECT headline, body, source, ai_summary FROM feed_entries WHERE id = ?',
+            conn, params=(entry_id,)
+        )
+        if row.empty:
+            conn.close()
+            return jsonify({'error': 'Entry not found'}), 404
+
+        item = row.iloc[0]
+
+        if item['ai_summary'] and len(str(item['ai_summary'])) > 20:
+            conn.close()
+            return jsonify({'summary': item['ai_summary'], 'cached': True})
+
+        import requests as req
+        headline = item['headline'] or ''
+        body = item['body'] or ''
+        source = item['source'] or ''
+
+        is_url = body.strip().startswith('http')
+        content = headline if is_url else f"{headline}. {body}"
+
+        prompt = (
+            "Write a 2-3 sentence summary of this AI news item for readers of an AI benchmark tracking site.\n"
+            "Be factual, concise, and explain why this matters to someone following AI model performance.\n"
+            "Do not start with 'This article' or 'This post'. Write in present tense.\n"
+            "Do not make up information — only summarize what is provided.\n\n"
+            f"Source: {source}\n"
+            f"Content: {content}\n\n"
+            "Summary:"
+        )
+
+        response = req.post(
+            'http://localhost:11434/api/generate',
+            json={
+                'model': 'qwen3:8b',
+                'prompt': prompt,
+                'stream': False,
+                'think': False,
+                'options': {'temperature': 0.3, 'num_predict': 120},
+            },
+            timeout=30,
+        )
+
+        summary = response.json().get('response', '').strip()
+
+        for prefix in ['Summary:', "Here is a summary:", "Here's a summary:"]:
+            if summary.startswith(prefix):
+                summary = summary[len(prefix):].strip()
+
+        if summary and len(summary) > 20:
+            conn.execute(
+                'UPDATE feed_entries SET ai_summary = ? WHERE id = ?',
+                (summary, entry_id)
+            )
+            conn.commit()
+            conn.close()
+            return jsonify({'summary': summary, 'cached': False})
+        else:
+            conn.close()
+            return jsonify({'summary': None})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/feed/entry/<int:entry_id>')
 def api_feed_entry(entry_id):
     conn = sqlite3.connect(DB_NAME)
@@ -866,8 +936,31 @@ def api_feed_entry(entry_id):
 def api_feed():
     batch_limit = int(request.args.get('batch_limit', 12))
     batch_offset = int(request.args.get('batch_offset', 0))
+    q = request.args.get('q', '').strip()
     conn = sqlite3.connect(DB_NAME)
     try:
+        if q:
+            df = pd.read_sql_query(
+                "SELECT * FROM feed_entries WHERE status = 'approved' "
+                "AND (headline LIKE ? OR source LIKE ?) "
+                "ORDER BY created_at DESC LIMIT 100",
+                conn, params=(f'%{q}%', f'%{q}%')
+            )
+            records = convert_pandas_types(df.to_dict('records'))
+            if records:
+                ids = [str(r['id']) for r in records]
+                placeholders = ','.join(['?'] * len(ids))
+                likes_df = pd.read_sql_query(
+                    f"SELECT item_id, COUNT(*) as likes FROM item_likes "
+                    f"WHERE item_type='article' AND item_id IN ({placeholders}) GROUP BY item_id",
+                    conn, params=ids
+                )
+                likes_map = dict(zip(likes_df['item_id'].astype(str), likes_df['likes'].astype(int)))
+                for r in records:
+                    r['likes'] = likes_map.get(str(r['id']), 0)
+            conn.close()
+            return jsonify(records)
+
         all_runs = pd.read_sql_query(
             "SELECT DISTINCT run_id FROM feed_entries WHERE status = 'approved' "
             "ORDER BY run_id DESC",
@@ -907,6 +1000,55 @@ def api_feed():
         return jsonify({'error': str(e)})
 
 
+@app.route('/api/admin/retag-models')
+def retag_models():
+    """Retroactively tag existing news_scanner articles with detected model names."""
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT DISTINCT canonical_name FROM name_normalizations WHERE canonical_name IS NOT NULL"
+        )
+        tracked_models = sorted([r[0] for r in cursor.fetchall() if r[0]], key=len, reverse=True)
+
+        if not tracked_models:
+            conn.close()
+            return jsonify({'tagged': 0, 'message': 'No tracked models in DB yet'})
+
+        df = pd.read_sql_query(
+            "SELECT id, headline FROM feed_entries WHERE type = 'news_scanner'",
+            conn
+        )
+
+        import re as _re
+
+        def _detect(text_lower, models):
+            for m in models:
+                m_lower = m.lower()
+                if len(m_lower) >= 5:
+                    if m_lower in text_lower:
+                        return m
+                else:
+                    if _re.search(r'(?<![a-zA-Z0-9])' + _re.escape(m_lower) + r'(?![a-zA-Z0-9])', text_lower):
+                        return m
+            return None
+
+        tagged = 0
+        for _, row in df.iterrows():
+            text_lower = str(row['headline'] or '').lower()
+            detected = _detect(text_lower, tracked_models)
+            conn.execute("UPDATE feed_entries SET model = ? WHERE id = ?", (detected, int(row['id'])))
+            if detected:
+                tagged += 1
+
+        conn.commit()
+        conn.close()
+        return jsonify({'tagged': tagged, 'total': len(df), 'tracked_models': len(tracked_models)})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/sources')
 def api_sources():
     source_count = len(SOURCES)
@@ -943,6 +1085,256 @@ def api_stats():
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)})
+
+
+@app.route('/api/stats/weekly')
+def api_weekly_stats():
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        from datetime import datetime, timedelta
+        seven_days_ago = (datetime.now() - timedelta(days=7)).isoformat()
+
+        rank_changes = pd.read_sql_query('''
+            SELECT COUNT(*) as count FROM feed_entries
+            WHERE type = 'rank_change'
+            AND created_at > ?
+            AND status = 'approved'
+        ''', conn, params=(seven_days_ago,)).iloc[0]['count']
+
+        new_models = pd.read_sql_query('''
+            SELECT COUNT(*) as count FROM feed_entries
+            WHERE type = 'new_model'
+            AND created_at > ?
+            AND status = 'approved'
+        ''', conn, params=(seven_days_ago,)).iloc[0]['count']
+
+        feed_entries = pd.read_sql_query('''
+            SELECT COUNT(*) as count FROM feed_entries
+            WHERE created_at > ?
+            AND status = 'approved'
+        ''', conn, params=(seven_days_ago,)).iloc[0]['count']
+
+        news_items = pd.read_sql_query('''
+            SELECT COUNT(*) as count FROM news_items
+            WHERE created_at > ?
+            AND status != 'discarded'
+        ''', conn, params=(seven_days_ago,)).iloc[0]['count']
+
+        models_tracked = pd.read_sql_query('''
+            SELECT COUNT(DISTINCT normalized_model) as count
+            FROM snapshots
+            WHERE snapshot_timestamp > ?
+        ''', conn, params=(seven_days_ago,)).iloc[0]['count']
+
+        twenty_five_hours_ago = (datetime.now() - timedelta(hours=25)).isoformat()
+        sources_live = pd.read_sql_query('''
+            SELECT COUNT(DISTINCT source) as count FROM snapshots
+            WHERE snapshot_timestamp > ?
+        ''', conn, params=(twenty_five_hours_ago,)).iloc[0]['count']
+
+        conn.close()
+        return jsonify({
+            'rank_changes': int(rank_changes),
+            'new_models': int(new_models),
+            'feed_entries': int(feed_entries),
+            'news_items': int(news_items),
+            'models_tracked': int(models_tracked),
+            'sources_live': int(sources_live),
+            'total_sources': len(SOURCES),
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================
+# RSS FEED
+# ============================================
+
+@app.route('/feed.rss')
+@app.route('/rss')
+@app.route('/feed.xml')
+def rss_feed():
+    from flask import Response
+    import email.utils
+
+    models_param = request.args.get('models', '')
+    watchlist_models = [m.strip() for m in models_param.split(',') if m.strip()]
+
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        df = pd.read_sql_query('''
+            SELECT id, headline, body, source, tier, type, created_at, model
+            FROM feed_entries
+            WHERE status = 'approved'
+            ORDER BY created_at DESC
+            LIMIT 100
+        ''', conn)
+        conn.close()
+    except Exception as e:
+        conn.close()
+        return Response('Error generating feed', status=500)
+
+    if watchlist_models:
+        def matches_watchlist(row):
+            model_field = str(row.get('model', '') or '').lower()
+            headline = str(row.get('headline', '') or '').lower()
+            return any(
+                w.lower() in model_field or w.lower() in headline
+                for w in watchlist_models
+            )
+        df = df[df.apply(matches_watchlist, axis=1)]
+
+    df = df.head(50)
+
+    if watchlist_models:
+        models_str = ', '.join(watchlist_models[:3])
+        ellipsis = '...' if len(watchlist_models) > 3 else ''
+        feed_title = f'AIBenchmark Watchlist — {models_str}{ellipsis}'
+        feed_desc = f'Personalized AI benchmark feed tracking: {", ".join(watchlist_models)}'
+    else:
+        feed_title = 'AIBenchmark — AI Model Rankings & News'
+        feed_desc = 'Live AI benchmark aggregator tracking model performance across 12 sources. Hourly updates on leaderboard changes, model releases, and AI news.'
+
+    def format_rss_date(iso_string):
+        try:
+            dt = datetime.fromisoformat(str(iso_string).replace('Z', '+00:00'))
+            return email.utils.format_datetime(dt)
+        except Exception:
+            return email.utils.format_datetime(datetime.now())
+
+    def clean_description(headline, body, source):
+        body_str = str(body or '')
+        if body_str.strip().startswith('http'):
+            return f'{headline} — via {source}'
+        return f'{body_str[:300]}...' if len(body_str) > 300 else body_str or headline
+
+    def tier_prefix(tier):
+        prefixes = {'big': '[BIG MOVE] ', 'moderate': '[UPDATE] ', 'small': '[SHIFT] '}
+        return prefixes.get(tier, '')
+
+    def escape_xml(s):
+        return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&apos;')
+
+    items_xml = ''
+    for _, row in df.iterrows():
+        title = f"{tier_prefix(row['tier'])}{row['headline']}"
+        description = clean_description(row['headline'], row['body'], row['source'])
+        pub_date = format_rss_date(row['created_at'])
+        link = f"https://aibenchmark.com/article/{row['id']}"
+        source_label = str(row['source'] or 'AIBenchmark')
+
+        items_xml += f'''
+        <item>
+            <title>{escape_xml(title)}</title>
+            <description>{escape_xml(description)}</description>
+            <link>{escape_xml(link)}</link>
+            <guid isPermaLink="true">{escape_xml(link)}</guid>
+            <pubDate>{pub_date}</pubDate>
+            <source url="https://aibenchmark.com/feed.rss">{escape_xml(source_label)}</source>
+            <category>{escape_xml(row['tier'] or 'update')}</category>
+        </item>'''
+
+    last_build = format_rss_date(df.iloc[0]['created_at']) if not df.empty else email.utils.format_datetime(datetime.now())
+
+    rss_xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>{escape_xml(feed_title)}</title>
+        <link>https://aibenchmark.com</link>
+        <description>{escape_xml(feed_desc)}</description>
+        <language>en-us</language>
+        <lastBuildDate>{last_build}</lastBuildDate>
+        <ttl>60</ttl>
+        <image>
+            <url>https://aibenchmark.com/favicon.svg</url>
+            <title>AIBenchmark</title>
+            <link>https://aibenchmark.com</link>
+        </image>
+        <atom:link href="https://aibenchmark.com/feed.rss" rel="self" type="application/rss+xml"/>
+        {items_xml}
+    </channel>
+</rss>'''
+
+    return Response(
+        rss_xml,
+        mimetype='application/rss+xml',
+        headers={
+            'Cache-Control': 'public, max-age=3600',
+            'X-Content-Type-Options': 'nosniff'
+        }
+    )
+
+
+# ============================================
+# DATA EXPLORER API ENDPOINTS
+# ============================================
+
+@app.route('/api/data/full')
+def api_data_full():
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        source_data = {}
+        for source in SOURCES:
+            name = source['name']
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT MAX(snapshot_timestamp) FROM snapshots WHERE source = ?',
+                (name,)
+            )
+            result = cursor.fetchone()
+            if result and result[0]:
+                latest_ts = result[0]
+                df = pd.read_sql_query('''
+                    SELECT model, normalized_model, score, rank, norm_combined,
+                           snapshot_timestamp
+                    FROM snapshots
+                    WHERE source = ? AND snapshot_timestamp = ?
+                ''', conn, params=(name, latest_ts))
+                source_data[name] = {
+                    'models': df.to_dict('records'),
+                    'last_updated': latest_ts,
+                    'model_count': len(df)
+                }
+
+        composites = get_composite_scores()
+
+        conn.close()
+        return jsonify(convert_pandas_types({
+            'composites': composites.to_dict('records'),
+            'sources': source_data,
+            'source_list': SOURCES,
+            'generated_at': datetime.now().isoformat()
+        }))
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/data/history/<path:model_name>')
+def api_data_history(model_name):
+    from urllib.parse import unquote
+    decoded = unquote(model_name)
+    conn = sqlite3.connect(DB_NAME)
+    try:
+        history = {}
+        for source in SOURCES:
+            name = source['name']
+            df = pd.read_sql_query('''
+                SELECT snapshot_timestamp, score, norm_combined, rank
+                FROM snapshots
+                WHERE source = ?
+                AND (normalized_model = ? OR normalized_model LIKE ?)
+                ORDER BY snapshot_timestamp ASC
+                LIMIT 100
+            ''', conn, params=(name, decoded, f'%{decoded}%'))
+            if not df.empty:
+                history[name] = df.to_dict('records')
+        conn.close()
+        return jsonify(convert_pandas_types(history))
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
 
 
 # ============================================

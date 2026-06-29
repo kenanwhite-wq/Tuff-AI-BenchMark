@@ -1,2 +1,7 @@
 .env
 benchmark.db
+*.db
+logs/
+__pycache__/
+.pids
+fetcher.log

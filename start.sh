@@ -9,7 +9,7 @@ echo "🚀 Starting all services..."
 
 # Start Flask API
 echo "  📡 Starting Flask API on port 5001..."
-nohup .venv-1/bin/python SimpleWeb > logs/flask.log 2>&1 &
+nohup .venv-1/bin/python -u SimpleWeb > logs/flask.log 2>&1 &
 FLASK_PID=$!
 
 # Start React
@@ -21,7 +21,7 @@ cd ..
 
 # Start Scheduler (optional)
 echo "  ⏰ Starting Scheduler..."
-nohup .venv-1/bin/python Timer.py > logs/scheduler.log 2>&1 &
+nohup .venv-1/bin/python -u Timer.py > logs/scheduler.log 2>&1 &
 SCHEDULER_PID=$!
 
 # Save PIDs to file

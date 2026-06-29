@@ -43,16 +43,43 @@ except Exception as e:
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen3:8b"
 MAX_ITEMS_PER_SOURCE = 10
+
+SOURCE_LIMITS = {
+    'Hacker News': 5,
+    'Reddit r/LocalLLaMA': 5,
+    'Reddit r/MachineLearning': 5,
+    'default': 10,
+}
+
+NOISY_SOURCES = {'Hacker News', 'Reddit r/LocalLLaMA', 'Reddit r/MachineLearning'}
+
+AI_KEYWORDS = [
+    'ai', 'llm', 'model', 'gpt', 'claude', 'gemini', 'llama', 'mistral',
+    'benchmark', 'transformer', 'neural', 'inference', 'training', 'fine-tun',
+    'agent', 'reasoning', 'coding', 'deepseek', 'anthropic', 'openai', 'google',
+    'meta ai', 'hugging', 'weights', 'parameter', 'token', 'context', 'prompt',
+    'rag', 'embedding', 'diffusion', 'multimodal', 'vision', 'speech', 'alignment',
+    'safety', 'rlhf', 'sft', 'quantiz', 'gguf', 'ollama', 'mlx', 'cuda',
+    'dataset', 'eval', 'leaderboard', 'arxiv', 'paper', 'research',
+]
+
 OLLAMA_PROMPT_TEMPLATE = (
-    "You are a classifier for an AI benchmark tracking website.\n"
-    "Read the article title and summary below and classify it into exactly one of these categories:\n\n"
-    "BENCHMARK - An exploit, contamination finding, saturation concern, new benchmark released, or methodology critique affecting a tracked benchmark\n"
-    "MODEL_RELEASE - A new AI model announced or released by any lab\n"
-    "PRICE_CHANGE - A change to API pricing, rate limits, or model availability\n"
-    "RESEARCH_PAPER - A new academic paper about AI evaluation, capabilities, or safety\n"
-    "GENERAL_NEWS - AI industry news worth surfacing: funding, leadership changes, regulatory actions, significant product launches\n"
-    "DISCARD - Press releases, minor updates, marketing content, anything not worth surfacing\n\n"
-    "Reply with ONLY the category name, nothing else.\n\n"
+    "You are a strict content filter for an AI model benchmark tracking website.\n"
+    "Your audience cares ONLY about: AI model releases, AI benchmark results, \n"
+    "AI research papers, AI company news, and AI safety/alignment topics.\n\n"
+    "Classify this item into exactly one category. Be aggressive about DISCARD —\n"
+    "when in doubt, discard.\n\n"
+    "BENCHMARK - exploit, contamination, saturation, new benchmark released, methodology critique\n"
+    "MODEL_RELEASE - new AI model announced or released\n"
+    "PRICE_CHANGE - API pricing or availability change\n"
+    "RESEARCH_PAPER - academic paper about AI evaluation, capabilities, or safety\n"
+    "GENERAL_NEWS - significant AI industry news: major funding, leadership changes, \n"
+    "               regulatory actions, important product launches. NOT hardware news, \n"
+    "               NOT general tech news, NOT social media drama.\n"
+    "DISCARD - hardware reviews, GPU mods, non-AI tech news, opinion pieces without \n"
+    "          new information, reddit drama, cryptocurrency, anything not directly \n"
+    "          about AI models or benchmarks\n\n"
+    "Reply with ONLY the category name.\n\n"
     "Title: {title}\n"
     "Summary: {summary}\n"
 )
@@ -194,8 +221,9 @@ def fetch_rss_items(source):
         if getattr(feed, "bozo", False):
             print(f"  ⚠️ RSS parse issue for {source['name']}: {getattr(feed, 'bozo_exception', 'unknown')}")
 
+        limit = SOURCE_LIMITS.get(source['name'], SOURCE_LIMITS['default'])
         items = []
-        for entry in getattr(feed, "entries", [])[:MAX_ITEMS_PER_SOURCE]:
+        for entry in getattr(feed, "entries", [])[:limit]:
             url = entry.get("link") or entry.get("id")
             title = entry.get("title") or entry.get("headline") or ""
             summary = entry.get("summary") or entry.get("description") or ""
@@ -256,8 +284,9 @@ def fetch_scrape_items(source):
         response = requests.get(source["url"], timeout=20, headers={"User-Agent": "Mozilla/5.0"})
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
+        limit = SOURCE_LIMITS.get(source['name'], SOURCE_LIMITS['default'])
         items = []
-        for title, url in find_scraped_items(soup, source["url"])[:MAX_ITEMS_PER_SOURCE]:
+        for title, url in find_scraped_items(soup, source["url"])[:limit]:
             items.append({
                 "url": url,
                 "title": clean_text(title),
@@ -269,6 +298,40 @@ def fetch_scrape_items(source):
     except Exception as exc:
         print(f"  ❌ Failed to scrape source {source['name']}: {exc}")
         return None
+
+
+def load_tracked_models(conn):
+    """Return canonical model names from the DB, sorted longest-first so
+    'GPT-4o-mini' matches before 'GPT-4o' when scanning text."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT DISTINCT canonical_name FROM name_normalizations WHERE canonical_name IS NOT NULL"
+        )
+        names = [row[0] for row in cursor.fetchall() if row[0]]
+        names.sort(key=len, reverse=True)
+        return names
+    except Exception:
+        return []
+
+
+def detect_model_in_text(text, tracked_models):
+    """Return the first tracked model name found in text (case-insensitive), or None.
+    Names shorter than 5 chars require word boundaries to avoid false matches like
+    'syn' matching 'Synergy'."""
+    import re
+    if not text or not tracked_models:
+        return None
+    text_lower = text.lower()
+    for model in tracked_models:
+        m_lower = model.lower()
+        if len(m_lower) >= 5:
+            if m_lower in text_lower:
+                return model
+        else:
+            if re.search(r'(?<![a-zA-Z0-9])' + re.escape(m_lower) + r'(?![a-zA-Z0-9])', text_lower):
+                return model
+    return None
 
 
 def is_news_item_seen(conn, url):
@@ -300,7 +363,7 @@ def persist_news_item(conn, item, classification, status):
     cursor.close()
 
 
-def route_feed_entry(conn, item, classification, run_id):
+def route_feed_entry(conn, item, classification, run_id, detected_model=None):
     now = datetime.now().isoformat()
     if classification == "BENCHMARK":
         tier = "big"
@@ -325,7 +388,7 @@ def route_feed_entry(conn, item, classification, run_id):
         f"INSERT INTO {FEED_TABLE} (model, source, tier, type, headline, body, status, created_at, run_id)"
         " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
-            item["title"],
+            detected_model,
             item["source_name"],
             tier,
             "news_scanner",
@@ -340,45 +403,65 @@ def route_feed_entry(conn, item, classification, run_id):
     cursor.close()
 
 
-def process_source(conn, source, fetcher, run_id):
+def process_source(conn, source, fetcher, run_id, tracked_models=None):
     print(f"\n📥 Fetching source: {source['name']}")
     items = fetcher(source)
     if items is None:
-        return 0, 0, 0, 1
+        return 0, 0, 0, 1, 0, 0, 0
 
     fetched = len(items)
     new_count = 0
     seen_count = 0
+    prefilter_skipped = 0
+    ollama_discarded = 0
+    published = 0
 
     for item in items:
         if not item.get("url"):
+            continue
+
+        title = item.get("title", "")
+
+        if len(title) < 15:
             continue
 
         if is_news_item_seen(conn, item["url"]):
             seen_count += 1
             continue
 
-        classification = classify_item(item["title"], item["summary"])
+        if source['name'] in NOISY_SOURCES:
+            title_lower = title.lower()
+            if not any(kw in title_lower for kw in AI_KEYWORDS):
+                print(f"  ⏭️ Skipping non-AI item: {title[:50]}")
+                prefilter_skipped += 1
+                continue
+
+        classification = classify_item(title, item["summary"])
         if classification is None:
-            print(f"  ⚠️ Skipping item due to classification failure: {item['title']}")
+            print(f"  ⚠️ Skipping item due to classification failure: {title}")
             continue
 
         status = "discarded" if classification == "DISCARD" else "active"
         try:
             persist_news_item(conn, item, classification, status)
         except Exception as exc:
-            print(f"  ❌ Failed to save news item '{item['title']}': {exc}")
+            print(f"  ❌ Failed to save news item '{title}': {exc}")
             continue
 
-        if classification != "DISCARD":
+        if classification == "DISCARD":
+            ollama_discarded += 1
+        else:
+            published += 1
             try:
-                route_feed_entry(conn, item, classification, run_id)
+                search_text = f"{item['title']} {item.get('summary', '')}"
+                detected_model = detect_model_in_text(search_text, tracked_models or [])
+                route_feed_entry(conn, item, classification, run_id, detected_model=detected_model)
             except Exception as exc:
-                print(f"  ❌ Failed to route feed entry for '{item['title']}': {exc}")
+                print(f"  ❌ Failed to route feed entry for '{title}': {exc}")
 
         new_count += 1
 
-    return fetched, new_count, seen_count, 0
+    return fetched, new_count, seen_count, 0, prefilter_skipped, ollama_discarded, published
 
 
 def main():
@@ -392,6 +475,8 @@ def main():
 
     init_database()
     conn = get_connection()
+    tracked_models = load_tracked_models(conn)
+    print(f"🏷️  Loaded {len(tracked_models)} tracked models for article tagging")
 
     summary = {
         "sources": {},
@@ -400,6 +485,9 @@ def main():
         "total_new": 0,
         "total_seen": 0,
         "total_errors": 0,
+        "total_prefilter_skipped": 0,
+        "total_ollama_discarded": 0,
+        "total_published": 0,
     }
 
     for source in RSS_SOURCES:
@@ -410,7 +498,7 @@ def main():
 
     try:
         for source in RSS_SOURCES:
-            fetched, new_count, seen_count, errors = process_source(conn, source, fetch_rss_items, run_id)
+            fetched, new_count, seen_count, errors, pre, disc, pub = process_source(conn, source, fetch_rss_items, run_id, tracked_models=tracked_models)
             summary["sources"][source["name"]]["fetched"] = fetched
             summary["sources"][source["name"]]["new"] = new_count
             summary["sources"][source["name"]]["seen"] = seen_count
@@ -419,9 +507,12 @@ def main():
             summary["total_new"] += new_count
             summary["total_seen"] += seen_count
             summary["total_errors"] += errors
+            summary["total_prefilter_skipped"] += pre
+            summary["total_ollama_discarded"] += disc
+            summary["total_published"] += pub
 
         for source in SCRAPE_SOURCES:
-            fetched, new_count, seen_count, errors = process_source(conn, source, fetch_scrape_items, run_id)
+            fetched, new_count, seen_count, errors, pre, disc, pub = process_source(conn, source, fetch_scrape_items, run_id, tracked_models=tracked_models)
             summary["sources"][source["name"]]["fetched"] = fetched
             summary["sources"][source["name"]]["new"] = new_count
             summary["sources"][source["name"]]["seen"] = seen_count
@@ -430,6 +521,9 @@ def main():
             summary["total_new"] += new_count
             summary["total_seen"] += seen_count
             summary["total_errors"] += errors
+            summary["total_prefilter_skipped"] += pre
+            summary["total_ollama_discarded"] += disc
+            summary["total_published"] += pub
     except Exception as exc:
         print(f"❌ News scanner errored: {exc}")
         traceback.print_exc()
@@ -454,6 +548,9 @@ def main():
         cursor.close()
         print(f"  - {category}: {count}")
 
+    print(f"\n📊 Pre-filter skipped: {summary['total_prefilter_skipped']} non-AI items")
+    print(f"📊 Ollama discarded: {summary['total_ollama_discarded']} items")
+    print(f"📊 Published to feed: {summary['total_published']} items")
     print("=" * 60)
 
 

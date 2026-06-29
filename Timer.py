@@ -7,33 +7,30 @@ import time
 import subprocess
 import sys
 from datetime import datetime, timedelta
-import os
 
 FETCHER_SCRIPT = "hourlyfetcher.py"
+NEWS_SCRIPT = "news_scanner.py"
 LOG_FILE = "fetcher.log"
 
-try:
-    import news_scanner
-except Exception as exc:
-    news_scanner = None
-    print(f"⚠️ Could not import news_scanner: {exc}")
+FETCHER_TIMEOUT = 300   # 5 minutes
+SCANNER_TIMEOUT = 120   # 2 minutes — previously no timeout; a hung fetch froze the whole scheduler
+
 
 def run_fetcher():
-    """Run the hourly fetcher"""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+
     print(f"\n{'='*60}")
     print(f"⏰ Running hourly fetch at {timestamp}")
     print(f"{'='*60}")
-    
+
     try:
         result = subprocess.run(
             [sys.executable, FETCHER_SCRIPT],
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=FETCHER_TIMEOUT
         )
-        
+
         with open(LOG_FILE, 'a') as f:
             f.write(f"\n{'='*60}\n")
             f.write(f"RUN AT: {timestamp}\n")
@@ -42,57 +39,78 @@ def run_fetcher():
             if result.stderr:
                 f.write(f"\nERRORS:\n{result.stderr}")
             f.write(f"\nEXIT CODE: {result.returncode}\n")
-        
-        print(f"✅ Fetcher completed at {datetime.now().strftime('%H:%M:%S')}")
-        
+
+        if result.returncode != 0:
+            print(f"⚠️  Fetcher exited {result.returncode} at {datetime.now().strftime('%H:%M:%S')}")
+        else:
+            print(f"✅ Fetcher completed at {datetime.now().strftime('%H:%M:%S')}")
+
+    except subprocess.TimeoutExpired:
+        print(f"⚠️  Fetcher timed out after {FETCHER_TIMEOUT}s — skipping this run")
+        with open(LOG_FILE, 'a') as f:
+            f.write(f"\n⚠️  TIMEOUT at {timestamp} (>{FETCHER_TIMEOUT}s)\n")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Fetcher error: {e}")
         with open(LOG_FILE, 'a') as f:
             f.write(f"\n❌ ERROR at {timestamp}: {e}\n")
 
+
+def run_news_scanner():
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"\n🔎 Running news scanner at {timestamp}...")
+
+    try:
+        result = subprocess.run(
+            [sys.executable, NEWS_SCRIPT],
+            capture_output=True,
+            text=True,
+            timeout=SCANNER_TIMEOUT
+        )
+
+        if result.returncode != 0:
+            print(f"⚠️  News scanner exited {result.returncode}")
+        else:
+            print(f"✅ News scanner completed at {datetime.now().strftime('%H:%M:%S')}")
+
+        if result.stderr:
+            # Only print first 300 chars of stderr to avoid log spam
+            snippet = result.stderr.strip()[:300]
+            if snippet:
+                print(f"   stderr: {snippet}")
+
+    except subprocess.TimeoutExpired:
+        print(f"⚠️  News scanner timed out after {SCANNER_TIMEOUT}s — skipping")
+    except Exception as e:
+        print(f"❌ News scanner error: {e}")
+
+
 def main():
-    """Main scheduler loop"""
     print("=" * 60)
-    print("🔄 HOURLY SCHEDULER (Simple)")
+    print("🔄 HOURLY SCHEDULER")
     print("=" * 60)
-    print(f"📁 Fetcher: {FETCHER_SCRIPT}")
-    print(f"📁 Log file: {LOG_FILE}")
+    print(f"📁 Fetcher:      {FETCHER_SCRIPT}  (timeout {FETCHER_TIMEOUT}s)")
+    print(f"📁 News scanner: {NEWS_SCRIPT}  (timeout {SCANNER_TIMEOUT}s)")
+    print(f"📁 Log file:     {LOG_FILE}")
+    print(f"🐍 Python:       {sys.executable}")
     print("=" * 60)
     print("Press Ctrl+C to stop\n")
-    
-    # Run once immediately
+
+    # Run once immediately on startup
     print("🚀 Running initial fetch...")
     run_fetcher()
+    run_news_scanner()
 
-    if news_scanner is not None and hasattr(news_scanner, 'main'):
-        try:
-            print("\n🔎 Running news scanner after initial fetch...")
-            news_scanner.main()
-        except Exception as exc:
-            print(f"❌ news_scanner failed: {exc}")
-
-    print("\n🔄 Waiting for next hour...")
-    
     while True:
-        # Calculate seconds until the next hour
         now = datetime.now()
         next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
         seconds_to_wait = max((next_hour - now).total_seconds(), 0)
-        
-        print(f"⏳ Next run at {next_hour.strftime('%H:%M:%S')} ({seconds_to_wait:.0f} seconds from now)")
-        
-        # Wait until the next hour
-        time.sleep(seconds_to_wait)
-        
-        # Run the fetcher
-        run_fetcher()
 
-        if news_scanner is not None and hasattr(news_scanner, 'main'):
-            try:
-                print("\n🔎 Running news scanner after leaderboard fetch...")
-                news_scanner.main()
-            except Exception as exc:
-                print(f"❌ news_scanner failed: {exc}")
+        print(f"\n⏳ Next run at {next_hour.strftime('%H:%M:%S')} ({seconds_to_wait:.0f}s from now)")
+        time.sleep(seconds_to_wait)
+
+        run_fetcher()
+        run_news_scanner()
+
 
 if __name__ == "__main__":
     try:

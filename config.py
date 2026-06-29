@@ -165,14 +165,27 @@ def parse_mmlu_pro_leaderboard(response=None):
         
         df_clean['score'] = df_clean['score'].apply(convert_score)
         df_clean = df_clean.dropna()
-        
-        # Add rank
+
+        # Strip trailing parenthetical suffixes: dates like (11/25), modes like
+        # (Thinking), variants like (high), (BF16) — they confuse name normalization
+        # and cause duplicate rows that should be the same model.
+        df_clean['model'] = (
+            df_clean['model']
+            .str.replace(r'\s*\([^)]*\)\s*$', '', regex=True)
+            .str.strip()
+        )
+
+        # After stripping, keep only the best score per model name
         df_clean = df_clean.sort_values('score', ascending=False)
+        df_clean = df_clean.drop_duplicates(subset=['model'], keep='first')
+
+        # Final rank
+        df_clean = df_clean.reset_index(drop=True)
         df_clean['rank'] = range(1, len(df_clean) + 1)
-        
+
         print(f"  ✅ Parsed {len(df_clean)} models with valid scores")
         print(f"  📊 Score range: {df_clean['score'].min():.1f} - {df_clean['score'].max():.1f}")
-        
+
         return df_clean
         
     except Exception as e:
@@ -1364,6 +1377,12 @@ def init_database():
             cursor.execute(f"ALTER TABLE {FEED_TABLE} ADD COLUMN run_id TEXT")
     except:
         pass
+
+    # Migration: add ai_summary column to feed_entries
+    try:
+        cursor.execute(f'ALTER TABLE {FEED_TABLE} ADD COLUMN ai_summary TEXT')
+    except:
+        pass  # column already exists
 
     # News items table
     cursor.execute(f'''
