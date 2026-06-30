@@ -543,16 +543,63 @@ def api_delete_comment(comment_id):
 @app.route('/api/models')
 def api_models():
     include_speed = request.args.get('include_speed', 'false').lower() == 'true'
+    view = request.args.get('view', 'composite')
+
+    def get_confidence(sources_available):
+        if sources_available >= 5:
+            return 'high'
+        elif sources_available >= 3:
+            return 'medium'
+        else:
+            return 'low'
+
+    if view != 'composite':
+        source_names = [s['name'] for s in SOURCES]
+        if view in source_names:
+            conn = sqlite3.connect(DB_NAME)
+            try:
+                cursor = conn.cursor()
+                cursor.execute('SELECT MAX(snapshot_timestamp) FROM snapshots WHERE source = ?', (view,))
+                result = cursor.fetchone()
+                if result and result[0]:
+                    latest_ts = result[0]
+                    source_df = pd.read_sql_query('''
+                        SELECT model, normalized_model, score, rank, norm_combined
+                        FROM snapshots
+                        WHERE source = ? AND snapshot_timestamp = ?
+                        ORDER BY rank ASC
+                    ''', conn, params=(view, latest_ts))
+                    source_data = source_df.to_dict('records')
+                    for i, item in enumerate(source_data):
+                        item['composite_score'] = item.get('norm_combined')
+                        item['composite_score_display'] = item.get('norm_combined')
+                        item['sources_available'] = 1
+                        item['confidence'] = 'source'
+                        item['show_composite'] = True
+                        item['rank'] = i + 1
+                        item['raw_score'] = item.get('score')
+                    return jsonify(convert_pandas_types(source_data))
+            except Exception as e:
+                print(f"Error fetching source view: {e}")
+            finally:
+                conn.close()
+
     composites = get_composite_scores(weights=dict(SPEED_WEIGHTS) if include_speed else None)
     results = []
     if not composites.empty:
         df = composites.sort_values('composite_score', ascending=False).reset_index(drop=True)
-        results = df[['model', 'composite_score', 'sources_available']].to_dict('records')
+        results = df[['model', 'composite_score', 'sources_available']].copy().to_dict('records')
         for i, item in enumerate(results):
             item['rank'] = i + 1
+            item['confidence'] = get_confidence(item['sources_available'])
+            if item['sources_available'] < 3:
+                item['composite_score_display'] = None
+                item['show_composite'] = False
+            else:
+                item['composite_score_display'] = item['composite_score']
+                item['show_composite'] = True
 
     # Append Elo-only models not already in results.
-    # normalize_model_name() is now cache-only — safe to call here.
     conn = sqlite3.connect(DB_NAME)
     try:
         elo_df = pd.read_sql_query("SELECT model, rating, votes_total FROM elo_ratings", conn)
@@ -565,7 +612,10 @@ def api_models():
                     results.append({
                         'model': normalized,
                         'composite_score': None,
+                        'composite_score_display': None,
+                        'show_composite': False,
                         'sources_available': 0,
+                        'confidence': 'low',
                         'rank': None,
                         'community_elo': float(row['rating']),
                         'votes_total': int(row['votes_total'] or 0),
@@ -1007,7 +1057,7 @@ def retag_models():
             return jsonify({'tagged': 0, 'message': 'No tracked models in DB yet'})
 
         df = pd.read_sql_query(
-            "SELECT id, headline FROM feed_entries WHERE type = 'news_scanner'",
+            "SELECT id, headline, body FROM feed_entries WHERE type = 'news_scanner'",
             conn
         )
 
@@ -1016,7 +1066,7 @@ def retag_models():
         def _detect(text_lower, models):
             for m in models:
                 m_lower = m.lower()
-                if len(m_lower) >= 5:
+                if len(m_lower) >= 4:
                     if m_lower in text_lower:
                         return m
                 else:
@@ -1026,7 +1076,7 @@ def retag_models():
 
         tagged = 0
         for _, row in df.iterrows():
-            text_lower = str(row['headline'] or '').lower()
+            text_lower = (str(row['headline'] or '') + ' ' + str(row['body'] or '')).lower()
             detected = _detect(text_lower, tracked_models)
             conn.execute("UPDATE feed_entries SET model = ? WHERE id = ?", (detected, int(row['id'])))
             if detected:

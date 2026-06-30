@@ -289,7 +289,7 @@ def detect_model_in_text(text, tracked_models):
     text_lower = text.lower()
     for model in tracked_models:
         m_lower = model.lower()
-        if len(m_lower) >= 5:
+        if len(m_lower) >= 4:
             if m_lower in text_lower:
                 return model
         else:

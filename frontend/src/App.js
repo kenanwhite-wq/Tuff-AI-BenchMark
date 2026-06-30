@@ -96,6 +96,8 @@ function Home() {
   const [watchlistOnly, setWatchlistOnly] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [view, setView] = useState('composite');
+  const [showLowConfidence, setShowLowConfidence] = useState(false);
 
   const toggleWatchlist = (modelName) => {
     setWatchlist(prev => {
@@ -173,14 +175,22 @@ function Home() {
     });
   })();
 
+  const highConfidence = filteredModels.filter(m => m.confidence === 'high');
+  const mediumConfidence = filteredModels.filter(m => m.confidence === 'medium');
+  const lowConfidence = filteredModels.filter(m => m.confidence === 'low');
+
+  const fetchModels = async (includeSpeed = false, currentView = 'composite') => {
+    const res = await API.get(`/models?include_speed=${includeSpeed}&view=${currentView}`);
+    setModels(res.data.slice(0, 50));
+  };
+
   const handlePriceToggle = async () => {
     if (toggleLoading) return;
     const next = !priceToggle;
     setPriceToggle(next);
     setToggleLoading(true);
     try {
-      const res = await API.get(`/models?include_speed=${next}`);
-      setModels(res.data.slice(0, 50));
+      await fetchModels(next, view);
     } catch (err) {
       console.error('Error fetching models with speed toggle:', err);
     } finally {
@@ -262,7 +272,7 @@ function Home() {
 
   useEffect(() => {
     Promise.all([
-      API.get('/models'),
+      API.get('/models?include_speed=false&view=composite'),
       API.get('/feed'),
       API.get('/sources'),
       API.get('/stats'),
@@ -310,6 +320,56 @@ function Home() {
     );
   }
 
+  const renderModelCard = (m, i, confidence) => {
+    const isFirst = confidence === 'high' && i === 0;
+    const hasScore = m.show_composite && m.composite_score_display != null;
+    const confidenceBar = {
+      high: { width: '100%', color: '#22c55e' },
+      medium: { width: '60%', color: '#f59e0b' },
+      low: { width: '20%', color: '#d4d4d8' },
+    }[confidence] || { width: '20%', color: '#d4d4d8' };
+
+    return (
+      <div key={m.model}
+        style={{ minWidth: 130, background: isFirst ? '#4f46e5' : '#f7f6ff', border: `1px solid ${isFirst ? '#4f46e5' : '#e5e7fb'}`, borderRadius: 10, padding: '12px 14px', flexShrink: 0, cursor: 'pointer', opacity: confidence === 'low' ? 0.75 : 1, position: 'relative', overflow: 'hidden', transition: 'transform 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+        onClick={() => navigate(`/model/${encodeURIComponent(m.model)}`)}
+      >
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleWatchlist(m.model); }}
+          style={{ position: 'absolute', top: 6, right: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1, opacity: watchlist.includes(m.model) ? 1 : 0.3, color: isFirst ? 'white' : '#f59e0b', padding: 2 }}
+          title={watchlist.includes(m.model) ? 'Remove from watchlist' : 'Add to watchlist'}
+        >
+          {watchlist.includes(m.model) ? '★' : '☆'}
+        </button>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: isFirst ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{m.rank}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: isFirst ? 'white' : '#18181b', marginBottom: 6, lineHeight: 1.2 }}>{m.model}</div>
+        {hasScore ? (
+          <div style={{ fontSize: 22, fontWeight: 800, color: isFirst ? 'white' : '#4f46e5', lineHeight: 1 }}>
+            {Number(m.composite_score_display).toFixed(1)}
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: isFirst ? 'rgba(255,255,255,0.5)' : '#d4d4d8', lineHeight: 1, fontStyle: 'italic' }}>
+            insufficient data
+          </div>
+        )}
+        <div style={{ fontSize: 10, marginTop: 4, color: isFirst ? 'rgba(255,255,255,0.6)' : '#a1a1aa' }}>
+          {m.sources_available}/{sources.length} sources
+        </div>
+        <button
+          onClick={(e) => toggleLike('model', m.model, e)}
+          style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11, color: likedItems.has(`model_${m.model}`) ? '#ef4444' : (isFirst ? 'rgba(255,255,255,0.5)' : '#a1a1aa'), fontWeight: 600 }}
+        >
+          {likedItems.has(`model_${m.model}`) ? '❤️' : '🤍'} {likeCounts[`model_${m.model}`] ?? m.likes ?? 0}
+        </button>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: '#e5e7fb' }}>
+          <div style={{ width: confidenceBar.width, height: '100%', background: confidenceBar.color, transition: 'width 0.3s' }} />
+        </div>
+      </div>
+    );
+  };
+
   const tierConfig = {
     big: { label: 'BIG MOVE', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
     moderate: { label: 'UPDATE', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
@@ -339,7 +399,7 @@ function Home() {
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>Today's Rankings</h1>
-            <span style={{ fontSize: 13, color: '#71717a' }}>{stats.sources || 0} sources · {stats.models || 0} models tracked</span>
+            <span style={{ fontSize: 13, color: '#71717a' }}>{stats.sources || 0} sources · {highConfidence.length + mediumConfidence.length} fully evaluated · {stats.models || 0} total models tracked</span>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 12, color: '#71717a' }}>Include cost/speed</span>
               <div onClick={handlePriceToggle} style={{ width: 36, height: 20, borderRadius: 10, background: priceToggle ? '#4f46e5' : '#d4d4d8', cursor: toggleLoading ? 'not-allowed' : 'pointer', position: 'relative', transition: 'background 0.2s', opacity: toggleLoading ? 0.6 : 1 }}>
@@ -353,34 +413,97 @@ function Home() {
             {searchQuery && <button onClick={() => setSearchQuery('')} style={{ border: 'none', background: '#e5e7eb', color: '#374151', padding: '10px 14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>Clear</button>}
           </div>
 
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-            {filteredModels.length === 0 ? (
-              <div style={{ color: '#71717a', fontSize: 13, padding: '18px 0' }}>No models match "{searchQuery}".</div>
-            ) : filteredModels.map((m, i) => (
-              <div key={m.model} style={{ position: 'relative', minWidth: 130, background: i === 0 ? '#4f46e5' : '#f7f6ff', border: `1px solid ${i === 0 ? '#4f46e5' : '#e5e7fb'}`, borderRadius: 10, padding: '12px 14px', flexShrink: 0, transition: 'transform 0.15s', cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                onClick={() => navigate(`/model/${encodeURIComponent(m.model)}`)}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleWatchlist(m.model); }}
-                  style={{ position: 'absolute', top: 6, right: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1, opacity: watchlist.includes(m.model) ? 1 : 0.3, color: i === 0 ? 'white' : '#f59e0b', padding: 2 }}
-                  title={watchlist.includes(m.model) ? 'Remove from watchlist' : 'Add to watchlist'}
-                >
-                  {watchlist.includes(m.model) ? '★' : '☆'}
-                </button>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: i === 0 ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{m.rank || i + 1}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: i === 0 ? 'white' : '#18181b', marginBottom: 6, lineHeight: 1.2 }}>{m.model}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: i === 0 ? 'white' : '#4f46e5', lineHeight: 1 }}>{m.composite_score ? m.composite_score.toFixed(1) : '—'}</div>
-                <div style={{ fontSize: 10, marginTop: 4, color: i === 0 ? 'rgba(255,255,255,0.6)' : '#a1a1aa' }}>{m.sources_available || 0}/{sources.length} sources</div>
-                <button
-                  onClick={(e) => toggleLike('model', m.model, e)}
-                  style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11, color: likedItems.has(`model_${m.model}`) ? '#ef4444' : (i === 0 ? 'rgba(255,255,255,0.5)' : '#a1a1aa'), fontWeight: 600 }}
-                >
-                  {likedItems.has(`model_${m.model}`) ? '❤️' : '🤍'} {likeCounts[`model_${m.model}`] ?? m.likes ?? 0}
-                </button>
-              </div>
+          {/* Source view selector */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 12, scrollbarWidth: 'none' }}>
+            <button
+              onClick={() => { setView('composite'); fetchModels(priceToggle, 'composite'); }}
+              style={{ flexShrink: 0, padding: '5px 14px', borderRadius: 20, border: `1px solid ${view === 'composite' ? '#4f46e5' : '#d4d4d8'}`, background: view === 'composite' ? '#4f46e5' : 'white', color: view === 'composite' ? 'white' : '#52525b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Composite
+            </button>
+            {sources.filter(s => s.name !== 'artificial_analysis_speed').map(s => (
+              <button
+                key={s.name}
+                onClick={() => { setView(s.name); fetchModels(priceToggle, s.name); }}
+                style={{ flexShrink: 0, padding: '5px 14px', borderRadius: 20, border: `1px solid ${view === s.name ? '#4f46e5' : '#d4d4d8'}`, background: view === s.name ? '#4f46e5' : 'white', color: view === s.name ? 'white' : '#52525b', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                {s.label || s.name}
+              </button>
             ))}
           </div>
+
+          {view !== 'composite' ? (
+            <div style={{ marginBottom: 8, paddingBottom: 16 }}>
+              <div style={{ fontSize: 11, color: '#71717a', marginBottom: 8 }}>
+                Showing {filteredModels.length} models ranked by {sources.find(s => s.name === view)?.label || view} · raw scores shown
+              </div>
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+                {filteredModels.map((m, i) => (
+                  <div key={m.model}
+                    style={{ minWidth: 140, background: i === 0 ? '#4f46e5' : '#f7f6ff', border: `1px solid ${i === 0 ? '#4f46e5' : '#e5e7fb'}`, borderRadius: 10, padding: '12px 14px', flexShrink: 0, cursor: 'pointer', transition: 'transform 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    onClick={() => navigate(`/model/${encodeURIComponent(m.model)}`)}
+                  >
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: i === 0 ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{m.rank}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: i === 0 ? 'white' : '#18181b', marginBottom: 6, lineHeight: 1.2 }}>
+                      {m.model || m.normalized_model}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: i === 0 ? 'white' : '#4f46e5', lineHeight: 1 }}>
+                      {m.composite_score != null && Number.isFinite(Number(m.composite_score)) ? Number(m.composite_score).toFixed(1) : '—'}
+                    </div>
+                    {m.raw_score != null && (
+                      <div style={{ fontSize: 10, marginTop: 4, color: i === 0 ? 'rgba(255,255,255,0.6)' : '#a1a1aa' }}>
+                        raw: {Number.isFinite(Number(m.raw_score)) ? Number(m.raw_score).toFixed(1) : m.raw_score}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : filteredModels.length === 0 ? (
+            <div style={{ color: '#71717a', fontSize: 13, padding: '18px 0 32px' }}>No models match "{searchQuery}".</div>
+          ) : (
+            <div style={{ paddingBottom: 16 }}>
+              {highConfidence.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#71717a', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 8 }}>
+                    ● Fully evaluated — 5+ sources
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+                    {highConfidence.map((m, i) => renderModelCard(m, i, 'high'))}
+                  </div>
+                </div>
+              )}
+
+              {mediumConfidence.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#71717a', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 8 }}>
+                    ◐ Partially evaluated — 3–4 sources
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+                    {mediumConfidence.map((m, i) => renderModelCard(m, i, 'medium'))}
+                  </div>
+                </div>
+              )}
+
+              {lowConfidence.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowLowConfidence(!showLowConfidence)}
+                    style={{ fontSize: 11, fontWeight: 600, color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 8, padding: 0 }}
+                  >
+                    {showLowConfidence ? '▼' : '▶'} Single source models — {lowConfidence.length} models
+                  </button>
+                  {showLowConfidence && (
+                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+                      {lowConfidence.map((m, i) => renderModelCard(m, i, 'low'))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
         <div style={{ height: 3, background: '#4f46e5' }} />
@@ -482,14 +605,31 @@ function Home() {
                           })() : item.body}
                         </div>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 11, flexWrap: 'wrap' }}>
-                          <span style={{ background: '#ede9fe', color: '#5b21b6', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>{sources.find(s => s.name === item.source)?.label || item.source}</span>
-                          {item.type === 'news_scanner' && item.model && (
+                          {(() => {
+                            const foundSource = sources.find(s => s.name === item.source);
+                            const label = foundSource?.label || item.source;
+                            let sourceUrl = null;
+                            if (foundSource?.url) {
+                              try { sourceUrl = new URL(foundSource.url).origin; } catch {}
+                            } else if (item.body?.startsWith('http')) {
+                              try { sourceUrl = new URL(item.body).origin; } catch {}
+                            }
+                            return sourceUrl ? (
+                              <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ background: '#ede9fe', color: '#5b21b6', padding: '2px 8px', borderRadius: 4, fontWeight: 600, textDecoration: 'none' }}>{label}</a>
+                            ) : (
+                              <span style={{ background: '#ede9fe', color: '#5b21b6', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>{label}</span>
+                            );
+                          })()}
+                          {item.model && (
                             <span
                               onClick={e => { e.stopPropagation(); navigate(`/model/${encodeURIComponent(item.model)}`); }}
                               style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 4, fontWeight: 600, cursor: 'pointer' }}
                             >
                               {item.model}
                             </span>
+                          )}
+                          {isNew && (
+                            <span style={{ background: '#22c55e', color: 'white', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>NEW</span>
                           )}
                           <span style={{ color: '#a1a1aa' }}>{item.created_at}</span>
                           <button

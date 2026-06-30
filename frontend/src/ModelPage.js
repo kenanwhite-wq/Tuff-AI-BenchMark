@@ -151,6 +151,21 @@ export default function ModelPage() {
               </div>
             </div>
 
+            {data.sources_available < 3 && (
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: 8,
+                padding: '12px 16px',
+                marginTop: 16,
+                marginBottom: 16,
+                fontSize: 13,
+                color: '#92400e',
+              }}>
+                ⚠️ Composite score is based on {data.sources_available} source{data.sources_available !== 1 ? 's' : ''} only — treat it as a rough signal rather than a definitive ranking. Score will improve as more benchmarks evaluate this model.
+              </div>
+            )}
+
             <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ background: '#eef2ff', borderRadius: 12, padding: 16 }}>
                 <div style={{ fontSize: 12, color: '#4338ca' }}>Community Elo</div>
