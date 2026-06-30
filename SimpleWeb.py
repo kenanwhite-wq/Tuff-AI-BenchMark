@@ -35,6 +35,8 @@ from config import (
     SPEED_WEIGHTS,
     like_item,
     unlike_item,
+    get_model_prices,
+    fetch_and_store_prices,
 )
 from flask_cors import CORS
 
@@ -1287,17 +1289,31 @@ def api_data_full():
                 }
 
         composites = get_composite_scores()
+        prices = get_model_prices()
 
         conn.close()
         return jsonify(convert_pandas_types({
             'composites': composites.to_dict('records'),
             'sources': source_data,
             'source_list': SOURCES,
+            'prices': prices,
             'generated_at': datetime.now().isoformat()
         }))
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/data/prices')
+def api_data_prices():
+    prices = get_model_prices()
+    if not prices:
+        try:
+            fetch_and_store_prices()
+            prices = get_model_prices()
+        except Exception:
+            pass
+    return jsonify(prices)
 
 
 @app.route('/api/data/history/<path:model_name>')

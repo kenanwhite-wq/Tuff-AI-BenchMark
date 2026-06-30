@@ -79,7 +79,8 @@ try:
         save_snapshot,
         save_feed_entries,
         detect_changes,
-        init_database
+        init_database,
+        fetch_and_store_prices,
     )
     from llm_client import validate_llm_config
     validate_llm_config()
@@ -247,7 +248,13 @@ def main():
     for source in SOURCES:
         if process_source(source):
             successful += 1
-    
+
+    # Fetch and store model prices
+    try:
+        fetch_and_store_prices()
+    except Exception as e:
+        print(f"⚠️ Price fetch failed: {e}")
+
     # Summary
     print("\n" + "=" * 60)
     print("✅ COMPLETE!")

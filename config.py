@@ -28,6 +28,7 @@ FEED_TABLE = "feed_entries"
 NEWS_ITEMS_TABLE = "news_items"
 CHANGELOG_TABLE = "changelog"
 COMPOSITE_TABLE = "composite_scores"
+MODEL_PRICES_TABLE = "model_prices"
 
 # ============================================
 # THRESHOLDS
@@ -788,6 +789,20 @@ def _llm_normalize(precleaned_name):
         return None
 
 
+def validate_normalization(raw_name, canonical_name):
+    import re
+    # Extract all numbers from both names
+    raw_numbers = set(re.findall(r'\d+\.?\d*', raw_name.lower()))
+    canonical_numbers = set(re.findall(r'\d+\.?\d*', canonical_name.lower()))
+
+    # If canonical has numbers not in raw, it hallucinated — reject it
+    hallucinated = canonical_numbers - raw_numbers
+    if hallucinated:
+        print(f"  ⚠️ Rejected hallucinated normalization: {raw_name} → {canonical_name} (invented numbers: {hallucinated})")
+        return False
+    return True
+
+
 def find_canonical_match(name):
     """
     Check whether `name` is close enough to an already-cached canonical name
@@ -883,7 +898,11 @@ def bulk_normalize_model_names(names_list):
     for p in unique_precleaned:
         if p in cached:
             continue
-        raw_canonical = _llm_normalize(p) or p
+        ollama_result = _ollama_normalize(p)
+        if ollama_result and validate_normalization(p, ollama_result):
+            raw_canonical = ollama_result
+        else:
+            raw_canonical = p
         canonical = find_canonical_match(raw_canonical)
         newly_cached[p] = canonical
         conn = get_connection()
@@ -1311,6 +1330,79 @@ def save_changelog_entry(entry):
     df.to_sql(CHANGELOG_TABLE, conn, if_exists='append', index=False)
     conn.close()
 
+def fetch_and_store_prices():
+    """Fetch model pricing from Artificial Analysis and persist to DB."""
+    api_key = os.environ.get('ARTIFICIAL_ANALYSIS_API_KEY')
+    if not api_key:
+        print("  ❌ ARTIFICIAL_ANALYSIS_API_KEY not set — skipping price fetch")
+        return False
+    print("  💰 Fetching model prices from Artificial Analysis...")
+    try:
+        resp = requests.get(
+            'https://artificialanalysis.ai/api/v2/data/llms/models',
+            headers={'x-api-key': api_key},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        models_list = resp.json().get('data', [])
+    except Exception as e:
+        print(f"  ❌ Error fetching prices: {e}")
+        return False
+
+    rows = []
+    for model in models_list:
+        name = model.get('name') or model.get('model') or model.get('id')
+        if not name:
+            continue
+        pricing = model.get('pricing') or {}
+        blended = pricing.get('price_1m_blended_3_to_1')
+        inp = pricing.get('price_1m_input_tokens')
+        out = pricing.get('price_1m_output_tokens')
+        if blended is None and inp is None:
+            continue
+        rows.append((name, normalize_model_name(name), blended, inp, out))
+
+    if not rows:
+        print("  ❌ No price data found")
+        return False
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    updated_at = datetime.now().isoformat()
+    cursor.execute(f'DELETE FROM {MODEL_PRICES_TABLE}')
+    cursor.executemany(
+        f'INSERT INTO {MODEL_PRICES_TABLE} (model, normalized_model, blended_price, input_price, output_price, updated_at) VALUES (?,?,?,?,?,?)',
+        [(r[0], r[1], r[2], r[3], r[4], updated_at) for r in rows]
+    )
+    conn.commit()
+    conn.close()
+    print(f"  ✅ Stored prices for {len(rows)} models")
+    return True
+
+
+def get_model_prices():
+    """Return dict mapping normalized_model -> {blended, input, output}."""
+    conn = get_connection()
+    try:
+        df = pd.read_sql_query(f'SELECT * FROM {MODEL_PRICES_TABLE}', conn)
+        conn.close()
+        if df.empty:
+            return {}
+        return {
+            row['normalized_model']: {
+                'model': row['model'],
+                'blended': row['blended_price'],
+                'input': row['input_price'],
+                'output': row['output_price'],
+            }
+            for _, row in df.iterrows()
+            if row['blended_price'] is not None or row['input_price'] is not None
+        }
+    except Exception:
+        conn.close()
+        return {}
+
+
 def init_database():
     """Initialize all tables if they don't exist"""
     conn = get_connection()
@@ -1484,6 +1576,19 @@ def init_database():
             raw_name TEXT PRIMARY KEY,
             canonical_name TEXT,
             created_at TEXT
+        )
+    ''')
+
+    # Model prices (from Artificial Analysis)
+    cursor.execute(f'''
+        CREATE TABLE IF NOT EXISTS {MODEL_PRICES_TABLE} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            model TEXT,
+            normalized_model TEXT,
+            blended_price REAL,
+            input_price REAL,
+            output_price REAL,
+            updated_at TEXT
         )
     ''')
 
