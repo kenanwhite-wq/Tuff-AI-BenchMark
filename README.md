@@ -20,7 +20,7 @@ Feed filters — filter by category (leaderboard changes, model releases, resear
 Model detail pages — full source breakdown, score history chart, and recent activity per model
 Article pages with threaded comments on every news item
 Community voting — pairwise model preference voting with Elo ratings, separate from the composite score
-News scanner — watches 13 sources hourly, classifies items with local Ollama AI
+News scanner — watches 13 sources hourly, classifies items with an LLM (Ollama locally, xAI API in production)
 Incomplete data badges — models missing coverage on some sources are flagged rather than hidden
 Methodology page — full source list, weights, and integrity concerns publicly documented
 Mobile responsive — works on iPhone and Android
@@ -97,18 +97,20 @@ Flask + Gunicorn
 Database
 SQLite
 AI normalization
-Ollama (Qwen3 8B, local)
+Ollama (local dev) / xAI API (production)
 News classification
-Ollama (Qwen3 8B, local)
+Ollama (local dev) / xAI API (production)
 Scheduler
 Python (Timer.py)
 Deployment
-DigitalOcean + Nginx
+Ubuntu VPS + Nginx — see [DEPLOYMENT.md](DEPLOYMENT.md)
 
 
 
 Running locally
-Prerequisites: Python 3.9+, Node.js 18+, Ollama
+Prerequisites: Python 3.9+, Node.js 18+, Ollama (local dev only)
+
+For production deployment on a VPS with xAI API instead of Ollama, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 1. Clone the repo
 
@@ -136,7 +138,9 @@ ARTIFICIAL_ANALYSIS_API_KEY=your_key_here   # free at artificialanalysis.ai
 
 ADMIN_TOKEN=your_random_secret              # generate with: python3 -c 'import secrets; print(secrets.token_hex(32))'
 
-4. Install Ollama and pull the model
+LLM_PROVIDER=ollama                         # use xai + XAI_API_KEY in production (see DEPLOYMENT.md)
+
+4. Install Ollama and pull the model (local dev only)
 
 # Install from ollama.com, then:
 
@@ -174,7 +178,7 @@ Tuff-AI-BenchMark/
 
 ├── Timer.py               # Scheduler — runs fetcher + scanner hourly
 
-├── SimpleWeb              # Flask API (all /api/* routes)
+├── SimpleWeb.py           # Flask API (all /api/* routes)
 
 ├── frontend/              # React app
 
@@ -220,7 +224,7 @@ The composite score is a weighted average across four equal categories. Within e
 
 Sources with documented integrity issues (reward-hacking exploits, gold-answer leaks) are retained but down-weighted, with the concern disclosed publicly on the methodology page.
 
-Model name normalization across sources uses a locally-running Qwen3 8B model with database caching — the same raw name is only normalized once, then reused from cache. This ensures the same model is matched correctly across sources even when named differently (e.g. "gpt-4o-2024-11-20" and "GPT-4o" resolve to the same entry).
+Model name normalization across sources uses an LLM with database caching — the same raw name is only normalized once, then reused from cache. Local development uses Ollama (Qwen3 8B); production uses the xAI API. This ensures the same model is matched correctly across sources even when named differently (e.g. "gpt-4o-2024-11-20" and "GPT-4o" resolve to the same entry).
 
 Full methodology: aibenchmark.com/methodology
 

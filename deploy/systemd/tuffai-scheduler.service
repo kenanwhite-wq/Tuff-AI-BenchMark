@@ -1,0 +1,14 @@
+[Unit]
+Description=Tuff AI Benchmark Scheduler
+After=network.target tuffai-api.service
+
+[Service]
+User=deploy
+WorkingDirectory=/opt/tuffai
+EnvironmentFile=/opt/tuffai/.env
+ExecStart=/opt/tuffai/.venv/bin/python -u Timer.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

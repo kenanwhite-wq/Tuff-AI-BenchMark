@@ -199,7 +199,7 @@ export default function ArticlePage() {
               background: 'rgba(79,70,229,0.1)',
               padding: '2px 8px', borderRadius: 10,
             }}>
-              Generated locally · Qwen3 8B
+              AI-generated summary
             </span>
           </div>
           {summaryLoading ? (

@@ -81,6 +81,8 @@ try:
         detect_changes,
         init_database
     )
+    from llm_client import validate_llm_config
+    validate_llm_config()
     print(f"  ✅ config loaded: {len(SOURCES)} sources, {len(PARSER_MAP)} parsers")
 except Exception as e:
     print(f"  ❌ Error importing config: {e}")
