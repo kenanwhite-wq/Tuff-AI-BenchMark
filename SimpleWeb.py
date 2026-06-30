@@ -599,7 +599,6 @@ def api_models():
                 item['composite_score_display'] = item['composite_score']
                 item['show_composite'] = True
 
-    # Append Elo-only models not already in results.
     conn = sqlite3.connect(DB_NAME)
     try:
         elo_df = pd.read_sql_query("SELECT model, rating, votes_total FROM elo_ratings", conn)
@@ -630,7 +629,6 @@ def api_models():
                             else:
                                 item['raw_names'] = raw_model
                             break
-        # Attach likes counts for all models
         if results:
             model_names = [str(item['model']) for item in results]
             placeholders = ','.join(['?'] * len(model_names))

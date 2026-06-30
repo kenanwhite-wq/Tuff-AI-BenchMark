@@ -343,7 +343,7 @@ function Home() {
         >
           {watchlist.includes(m.model) ? '★' : '☆'}
         </button>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: isFirst ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{m.rank}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: isFirst ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{i + 1}</div>
         <div style={{ fontSize: 12, fontWeight: 700, color: isFirst ? 'white' : '#18181b', marginBottom: 6, lineHeight: 1.2 }}>{m.model}</div>
         {hasScore ? (
           <div style={{ fontSize: 22, fontWeight: 800, color: isFirst ? 'white' : '#4f46e5', lineHeight: 1 }}>
@@ -399,7 +399,11 @@ function Home() {
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>Today's Rankings</h1>
-            <span style={{ fontSize: 13, color: '#71717a' }}>{stats.sources || 0} sources · {highConfidence.length + mediumConfidence.length} fully evaluated · {stats.models || 0} total models tracked</span>
+            <span style={{ fontSize: 13, color: '#71717a' }}>
+              {stats.sources || 0} sources
+              {view === 'composite' && ` · ${highConfidence.length + mediumConfidence.length} fully evaluated`}
+              {' · '}{stats.models || 0} total models tracked
+            </span>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 12, color: '#71717a' }}>Include cost/speed</span>
               <div onClick={handlePriceToggle} style={{ width: 36, height: 20, borderRadius: 10, background: priceToggle ? '#4f46e5' : '#d4d4d8', cursor: toggleLoading ? 'not-allowed' : 'pointer', position: 'relative', transition: 'background 0.2s', opacity: toggleLoading ? 0.6 : 1 }}>
@@ -417,7 +421,7 @@ function Home() {
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 12, scrollbarWidth: 'none' }}>
             <button
               onClick={() => { setView('composite'); fetchModels(priceToggle, 'composite'); }}
-              style={{ flexShrink: 0, padding: '5px 14px', borderRadius: 20, border: `1px solid ${view === 'composite' ? '#4f46e5' : '#d4d4d8'}`, background: view === 'composite' ? '#4f46e5' : 'white', color: view === 'composite' ? 'white' : '#52525b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              style={{ flexShrink: 0, padding: '5px 14px', borderRadius: 20, border: `1px solid ${view === 'composite' ? '#4f46e5' : '#d4d4d8'}`, background: view === 'composite' ? '#4f46e5' : 'white', color: view === 'composite' ? 'white' : '#52525b', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
               Composite
             </button>
@@ -435,7 +439,7 @@ function Home() {
           {view !== 'composite' ? (
             <div style={{ marginBottom: 8, paddingBottom: 16 }}>
               <div style={{ fontSize: 11, color: '#71717a', marginBottom: 8 }}>
-                Showing {filteredModels.length} models ranked by {sources.find(s => s.name === view)?.label || view} · raw scores shown
+                Showing {filteredModels.length} models ranked by {sources.find(s => s.name === view)?.label || view}
               </div>
               <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
                 {filteredModels.map((m, i) => (
@@ -445,7 +449,7 @@ function Home() {
                     onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                     onClick={() => navigate(`/model/${encodeURIComponent(m.model)}`)}
                   >
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: i === 0 ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{m.rank}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', color: i === 0 ? 'rgba(255,255,255,0.7)' : '#a1a1aa', marginBottom: 4 }}>#{i + 1}</div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: i === 0 ? 'white' : '#18181b', marginBottom: 6, lineHeight: 1.2 }}>
                       {m.model || m.normalized_model}
                     </div>
