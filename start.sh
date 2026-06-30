@@ -9,7 +9,7 @@ echo "🚀 Starting all services..."
 
 # Start Flask API
 echo "  📡 Starting Flask API on port 5001..."
-nohup .venv-1/bin/python -u SimpleWeb > logs/flask.log 2>&1 &
+nohup .venv-1/bin/python -u SimpleWeb.py > logs/flask.log 2>&1 &
 FLASK_PID=$!
 
 # Start React

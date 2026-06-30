@@ -166,10 +166,19 @@ tail -f /opt/tuffai/fetcher.log
 ## 7. Nginx
 
 ```bash
+# Disable Ubuntu's default site (avoids conflicting server_name warnings)
+sudo rm -f /etc/nginx/sites-enabled/default
+
 sudo cp /opt/tuffai/deploy/nginx/tuffai.net.conf /etc/nginx/sites-available/tuffai.net
-sudo ln -s /etc/nginx/sites-available/tuffai.net /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/tuffai.net /etc/nginx/sites-enabled/tuffai.net
 sudo nginx -t
 sudo systemctl reload nginx
+```
+
+Confirm only one enabled site references `tuffai.net`:
+
+```bash
+grep -r "server_name" /etc/nginx/sites-enabled/
 ```
 
 Flask listens on `127.0.0.1:5001` only — do not expose it publicly.
@@ -187,10 +196,34 @@ Wait for DNS propagation before requesting TLS certificates.
 
 ## 9. HTTPS with Let's Encrypt
 
+**Important:** Complete sections 7 (Nginx site config for `tuffai.net`) and 8 (DNS) before running Certbot. If Certbot runs while only the Ubuntu `default` site is enabled, it will attach the certificate to the wrong config and you will see `conflicting server name` warnings and renewal failures.
+
+Create the ACME challenge directory and ensure nginx can serve it (the deploy config includes this block):
+
 ```bash
+sudo mkdir -p /var/www/certbot
+sudo chown -R www-data:www-data /var/www/certbot
+```
+
+Update nginx if you deployed before this block existed — add inside the `server { ... }` for port 80, **before** `location /`:
+
+```nginx
+location ^~ /.well-known/acme-challenge/ {
+    root /var/www/certbot;
+    allow all;
+}
+```
+
+Then:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d tuffai.net -d www.tuffai.net
 ```
+
+Choose to redirect HTTP to HTTPS when prompted.
 
 Certbot configures auto-renewal. Test renewal with:
 
@@ -264,7 +297,7 @@ xAI usage is highest on the first `hourlyfetcher.py` run, when many model names 
 | `LLM_PROVIDER` | `ollama` (default) | `xai` |
 | Ollama | Required (`ollama pull qwen3:8b`) | Not installed |
 | Frontend | `npm start` on port 3000 | `npm run build` served by Nginx |
-| Backend | `python SimpleWeb` or `./start.sh` | Gunicorn via systemd |
+| Backend | `python SimpleWeb.py` or `./start.sh` | Gunicorn via systemd |
 | `start.sh` | Dev helper only (hardcoded path) | Do not use |
 
 For local development, see [README.md](README.md).
@@ -281,10 +314,111 @@ For local development, see [README.md](README.md).
 - Run `python3 hourlyfetcher.py` manually and inspect output
 - Confirm `ARTIFICIAL_ANALYSIS_API_KEY` is valid
 
+**`conflicting server name "tuffai.net" ... ignored`**
+
+Nginx found two configs claiming `tuffai.net` on port 80. The duplicate is ignored, so visitors may see the wrong site (often the Ubuntu default page).
+
+```bash
+# See what is enabled
+ls -la /etc/nginx/sites-enabled/
+
+# Find all tuffai.net definitions
+grep -r "server_name" /etc/nginx/sites-available/ /etc/nginx/sites-enabled/
+
+# Remove the default site and duplicate symlinks
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo rm -f /etc/nginx/sites-enabled/tuffai.net  # remove broken/duplicate symlink if needed
+sudo ln -sf /etc/nginx/sites-available/tuffai.net /etc/nginx/sites-enabled/tuffai.net
+
+# If certbot created a separate file, keep only one — e.g.:
+# sudo rm -f /etc/nginx/sites-enabled/tuffai.net-le-ssl
+# and merge SSL into sites-available/tuffai.net, OR keep the certbot file and remove the plain one
+
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Also confirm the React build exists:
+
+```bash
+ls -la /opt/tuffai/frontend/build/index.html
+```
+
+**Certbot cert landed on `default` instead of `tuffai.net`**
+
+This happens when Certbot was run before the `tuffai.net` nginx site was enabled.
+
+```bash
+# See where SSL was configured
+grep -r "ssl_certificate" /etc/nginx/sites-available/ /etc/nginx/sites-enabled/
+ls -la /etc/nginx/sites-enabled/
+
+# 1. Ensure tuffai.net site is correct (HTTP + app proxy + acme-challenge)
+sudo nano /etc/nginx/sites-available/tuffai.net
+
+# 2. Disable default entirely
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# 3. Re-run certbot so it updates the tuffai.net config
+sudo certbot --nginx -d tuffai.net -d www.tuffai.net
+
+# 4. Confirm only tuffai.net is enabled and has ssl_certificate lines
+grep -r "server_name\|ssl_certificate" /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+If Certbot refuses to re-install, delete and start fresh:
+
+```bash
+sudo certbot delete --cert-name tuffai.net
+sudo certbot --nginx -d tuffai.net -d www.tuffai.net
+```
+
+**Certbot / renewal fails (`orderNotReady`, `invalid`)**
+
+Usually means Let's Encrypt could not verify domain ownership over HTTP. Common causes: missing ACME challenge path, DNS not pointing at the VPS, or a broken partial cert from a previous attempt.
+
+```bash
+# 1. Confirm DNS
+dig tuffai.net +short
+dig www.tuffai.net +short
+# Both must return your VPS public IP
+
+# 2. Confirm port 80 reaches nginx
+curl -I http://tuffai.net
+
+# 3. Ensure ACME directory exists
+sudo mkdir -p /var/www/certbot
+echo test | sudo tee /var/www/certbot/test.txt
+curl http://tuffai.net/.well-known/acme-challenge/test.txt
+# Must return "test", not index.html
+
+# 4. Inspect existing cert state
+sudo certbot certificates
+sudo tail -50 /var/log/letsencrypt/letsencrypt.log
+
+# 5. Delete broken cert and re-issue cleanly
+sudo certbot delete --cert-name tuffai.net
+sudo certbot --nginx -d tuffai.net -d www.tuffai.net
+
+# 6. Re-test renewal
+sudo certbot renew --dry-run
+```
+
+If using **Cloudflare** (orange cloud / proxied DNS), either:
+- Set DNS to **DNS only** (grey cloud) while running certbot, then re-enable proxy with SSL mode **Full (strict)**, or
+- Use a [Cloudflare Origin Certificate](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/) on the VPS instead of Let's Encrypt.
+
 **502 Bad Gateway from Nginx**
 
 - `sudo systemctl status tuffai-api`
 - Confirm Gunicorn is listening: `ss -tlnp | grep 5001`
+
+**`ModuleNotFoundError: No module named 'SimpleWeb'`**
+
+- The Flask app must be named `SimpleWeb.py` (with `.py` extension) so Gunicorn can import `wsgi:app`
+- After pulling the fix: `git pull && sudo systemctl restart tuffai-api`
 
 **Article summaries fail**
 

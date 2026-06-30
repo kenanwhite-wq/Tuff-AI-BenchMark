@@ -8,7 +8,7 @@ lsof -ti:5001 | xargs kill -9 2>/dev/null
 lsof -ti:3000 | xargs kill -9 2>/dev/null
 
 # Kill by process name as backup
-pkill -9 -f SimpleWeb 2>/dev/null
+pkill -9 -f SimpleWeb.py 2>/dev/null
 pkill -9 -f "react-scripts" 2>/dev/null
 pkill -9 -f "Timer.py" 2>/dev/null
 pkill -9 -f "hourlyfetcher.py" 2>/dev/null

@@ -178,7 +178,7 @@ Tuff-AI-BenchMark/
 
 ├── Timer.py               # Scheduler — runs fetcher + scanner hourly
 
-├── SimpleWeb              # Flask API (all /api/* routes)
+├── SimpleWeb.py           # Flask API (all /api/* routes)
 
 ├── frontend/              # React app
 
