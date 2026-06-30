@@ -467,3 +467,17 @@
 127.0.0.1 - - [30/Jun/2026 09:13:09] "GET /api/models?include_speed=false&view=composite HTTP/1.1" 200 -
 127.0.0.1 - - [30/Jun/2026 09:13:09] "GET /api/vote/pair HTTP/1.1" 200 -
 127.0.0.1 - - [30/Jun/2026 09:13:10] "GET /api/models?include_speed=false&view=livecodebench HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:49] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:49] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:49] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:49] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:49] "GET /api/stats/weekly HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:50] "GET /api/models?include_speed=false&view=composite HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:50] "GET /api/vote/pair HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:54] "GET /api/sources HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:54] "GET /api/vote/stats HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:54] "GET /api/feed HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:54] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:54] "GET /api/stats/weekly HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:55] "GET /api/models?include_speed=false&view=composite HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jun/2026 09:46:55] "GET /api/vote/pair HTTP/1.1" 200 -
