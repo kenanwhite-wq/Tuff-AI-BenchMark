@@ -3,7 +3,7 @@ WEB INTERFACE - MERGED VERSION
 Reliable data display + feed approval
 """
 
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, render_template_string, jsonify, request, g
 from urllib.parse import unquote
 import sqlite3
 import pandas as pd
@@ -11,6 +11,8 @@ import numpy as np
 from datetime import datetime
 import os
 import re
+import time
+import threading
 from functools import wraps
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -40,9 +42,59 @@ from config import (
 )
 from flask_cors import CORS
 
+try:
+    from flask_compress import Compress
+    compress_available = True
+except ImportError:
+    compress_available = False
+
 app = Flask(__name__)
 CORS(app)
 init_database()
+
+if compress_available:
+    app.config['COMPRESS_MIMETYPES'] = [
+        'text/html', 'text/css', 'text/plain',
+        'application/json', 'application/javascript',
+        'application/rss+xml'
+    ]
+    app.config['COMPRESS_MIN_SIZE'] = 500
+    app.config['COMPRESS_LEVEL'] = 6
+    Compress(app)
+
+
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_NAME)
+        g.db.row_factory = sqlite3.Row
+        g.db.execute('PRAGMA journal_mode=WAL')
+        g.db.execute('PRAGMA synchronous=NORMAL')
+        g.db.execute('PRAGMA cache_size=-64000')
+        g.db.execute('PRAGMA temp_store=MEMORY')
+    return g.db
+
+
+@app.teardown_appcontext
+def close_db(error):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+
+@app.before_request
+def before_request():
+    g.start_time = time.time()
+
+
+@app.after_request
+def after_request(response):
+    if hasattr(g, 'start_time'):
+        elapsed = time.time() - g.start_time
+        if elapsed > 1.0:
+            print(f'⚠️ Slow request: {request.path} took {elapsed:.2f}s')
+        response.headers['X-Response-Time'] = f'{elapsed:.3f}s'
+    return response
+
 
 limiter = Limiter(
     app=app,
@@ -50,6 +102,7 @@ limiter = Limiter(
     default_limits=[],
     storage_uri='memory://'
 )
+
 
 def require_admin(f):
     @wraps(f)
@@ -63,9 +116,11 @@ def require_admin(f):
         return f(*args, **kwargs)
     return decorated
 
+
 @app.errorhandler(429)
 def rate_limit_handler(e):
     return jsonify({'error': 'Too many requests. Please slow down.'}), 429
+
 
 def convert_pandas_types(obj):
     if isinstance(obj, dict):
@@ -80,6 +135,36 @@ def convert_pandas_types(obj):
         return obj.item()
     else:
         return obj
+
+
+def run_with_timeout(func, timeout_seconds=10, default=None):
+    result = [default]
+    exception = [None]
+
+    def target():
+        try:
+            result[0] = func()
+        except Exception as e:
+            exception[0] = e
+
+    thread = threading.Thread(target=target)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout_seconds)
+
+    if thread.is_alive():
+        print(f'⚠️ Query timed out after {timeout_seconds}s')
+        return default
+    if exception[0]:
+        raise exception[0]
+    return result[0]
+
+
+def add_cache_headers(response, max_age_seconds):
+    response.headers['Cache-Control'] = f'public, max-age={max_age_seconds}'
+    response.headers['Vary'] = 'Accept-Encoding'
+    return response
+
 
 def get_latest_snapshot_for_source(source_name, conn, limit=50):
     try:
@@ -99,6 +184,7 @@ def get_latest_snapshot_for_source(source_name, conn, limit=50):
     except Exception as e:
         print(f"⚠️ Error: {e}")
         return None
+
 
 # ============================================
 # HTML TEMPLATE (with feed approval)
@@ -370,13 +456,29 @@ setTimeout(() => location.reload(), 60000);
 # ROUTES
 # ============================================
 
+@app.route('/health')
+def health():
+    try:
+        conn = get_db()
+        conn.execute('SELECT 1')
+        db_status = 'ok'
+    except Exception:
+        db_status = 'error'
+    return jsonify({
+        'status': 'ok',
+        'db': db_status,
+        'timestamp': datetime.now().isoformat(),
+        'sources': len(SOURCES)
+    })
+
+
 @app.route('/')
 def index():
     composites = get_composite_scores()
     if composites.empty:
         composites = pd.DataFrame({'model': ['No data'], 'composite_score': [0], 'sources_available': [0]})
 
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
 
     try:
         feed_approved = pd.read_sql_query("SELECT * FROM feed_entries WHERE status = 'approved' ORDER BY created_at DESC LIMIT 20", conn)
@@ -393,8 +495,6 @@ def index():
         df = get_latest_snapshot_for_source(name, conn, limit=50)
         source_data[name] = df if df is not None else pd.DataFrame()
 
-    conn.close()
-
     return render_template_string(
         HTML,
         composites=composites.head(12).to_dict('records'),
@@ -409,7 +509,7 @@ def index():
 
 @app.route('/debug')
 def debug():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     results = {}
     for source in SOURCES:
         name = source['name']
@@ -423,7 +523,6 @@ def debug():
             'latest_timestamp': latest,
             'sample': convert_pandas_types(df.to_dict('records')) if not df.empty else []
         }
-    conn.close()
     return jsonify(results)
 
 
@@ -440,10 +539,9 @@ def api_approve(entry_id):
 @app.route('/api/reject/<int:entry_id>', methods=['POST'])
 @require_admin
 def api_reject(entry_id):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     conn.execute("DELETE FROM feed_entries WHERE id = ?", (entry_id,))
     conn.commit()
-    conn.close()
     return jsonify({'status': 'rejected'})
 
 
@@ -556,7 +654,7 @@ def api_models():
     if view != 'composite':
         source_names = [s['name'] for s in SOURCES]
         if view in source_names:
-            conn = sqlite3.connect(DB_NAME)
+            conn = get_db()
             try:
                 cursor = conn.cursor()
                 cursor.execute('SELECT MAX(snapshot_timestamp) FROM snapshots WHERE source = ?', (view,))
@@ -578,13 +676,24 @@ def api_models():
                         item['show_composite'] = True
                         item['rank'] = i + 1
                         item['raw_score'] = item.get('score')
-                    return jsonify(convert_pandas_types(source_data))
+                    response = jsonify(convert_pandas_types(source_data))
+                    return add_cache_headers(response, 300)
             except Exception as e:
                 print(f"Error fetching source view: {e}")
-            finally:
-                conn.close()
 
-    composites = get_composite_scores(weights=dict(SPEED_WEIGHTS) if include_speed else None)
+    cached = _warmup_cache.get('composites')
+    if cached is not None and not (hasattr(cached, 'empty') and cached.empty):
+        composites = cached
+    else:
+        composites = run_with_timeout(
+            lambda: get_composite_scores(weights=dict(SPEED_WEIGHTS) if include_speed else None),
+            timeout_seconds=8,
+            default=pd.DataFrame()
+        )
+
+    if composites is None or (hasattr(composites, 'empty') and composites.empty):
+        return jsonify([])
+
     results = []
     if not composites.empty:
         df = composites.sort_values('composite_score', ascending=False).reset_index(drop=True)
@@ -599,7 +708,7 @@ def api_models():
                 item['composite_score_display'] = item['composite_score']
                 item['show_composite'] = True
 
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         elo_df = pd.read_sql_query("SELECT model, rating, votes_total FROM elo_ratings", conn)
         if not elo_df.empty:
@@ -640,10 +749,11 @@ def api_models():
             likes_map = dict(zip(likes_df['item_id'].astype(str), likes_df['likes'].astype(int)))
             for item in results:
                 item['likes'] = likes_map.get(str(item['model']), 0)
-    finally:
-        conn.close()
+    except Exception as e:
+        print(f"Error in api_models elo/likes merge: {e}")
 
-    return jsonify(convert_pandas_types(results))
+    response = jsonify(convert_pandas_types(results))
+    return add_cache_headers(response, 300)
 
 
 # ============================================
@@ -704,7 +814,7 @@ def api_model(model_name):
     decoded_name = unquote(model_name)
     norm_name = normalize_model_name(decoded_name)
 
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
 
     # overall composite and rank
     composite_score = None
@@ -855,17 +965,13 @@ def api_model(model_name):
     # model likes count
     model_likes = 0
     try:
-        conn2 = sqlite3.connect(DB_NAME)
-        likes_row = conn2.execute(
+        likes_row = conn.execute(
             "SELECT COUNT(*) FROM item_likes WHERE item_type='model' AND item_id=?",
             (decoded_name,)
         ).fetchone()
         model_likes = likes_row[0] if likes_row else 0
-        conn2.close()
     except Exception:
         pass
-
-    conn.close()
 
     if composite_score is None and community_elo is None and not any(s['has_data'] for s in source_scores):
         return jsonify({'error': 'Model not found'}), 404
@@ -890,20 +996,18 @@ def api_model(model_name):
 
 @app.route('/api/feed/entry/<int:entry_id>/summary')
 def api_entry_summary(entry_id):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         row = pd.read_sql_query(
             'SELECT headline, body, source, ai_summary FROM feed_entries WHERE id = ?',
             conn, params=(entry_id,)
         )
         if row.empty:
-            conn.close()
             return jsonify({'error': 'Entry not found'}), 404
 
         item = row.iloc[0]
 
         if item['ai_summary'] and len(str(item['ai_summary'])) > 20:
-            conn.close()
             return jsonify({'summary': item['ai_summary'], 'cached': True})
 
         from llm_client import generate_text
@@ -937,26 +1041,22 @@ def api_entry_summary(entry_id):
                 (summary, entry_id)
             )
             conn.commit()
-            conn.close()
             return jsonify({'summary': summary, 'cached': False})
         else:
-            conn.close()
             return jsonify({'summary': None})
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/feed/entry/<int:entry_id>')
 def api_feed_entry(entry_id):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         df = pd.read_sql_query(
             "SELECT * FROM feed_entries WHERE id = ? LIMIT 1",
             conn, params=(entry_id,)
         )
         if df.empty:
-            conn.close()
             return jsonify({'error': 'Entry not found'}), 404
         record = convert_pandas_types(df.to_dict('records')[0])
         likes_row = conn.execute(
@@ -964,10 +1064,8 @@ def api_feed_entry(entry_id):
             (str(entry_id),)
         ).fetchone()
         record['likes'] = likes_row[0] if likes_row else 0
-        conn.close()
         return jsonify(record)
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)}), 500
 
 
@@ -976,7 +1074,7 @@ def api_feed():
     batch_limit = int(request.args.get('batch_limit', 12))
     batch_offset = int(request.args.get('batch_offset', 0))
     q = request.args.get('q', '').strip()
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         if q:
             df = pd.read_sql_query(
@@ -997,7 +1095,6 @@ def api_feed():
                 likes_map = dict(zip(likes_df['item_id'].astype(str), likes_df['likes'].astype(int)))
                 for r in records:
                     r['likes'] = likes_map.get(str(r['id']), 0)
-            conn.close()
             return jsonify(records)
 
         all_runs = pd.read_sql_query(
@@ -1006,11 +1103,9 @@ def api_feed():
             conn
         )
         if all_runs.empty:
-            conn.close()
             return jsonify([])
         run_ids = all_runs['run_id'].tolist()[batch_offset:batch_offset + batch_limit]
         if not run_ids:
-            conn.close()
             return jsonify([])
         placeholders_runs = ','.join(['?'] * len(run_ids))
         df = pd.read_sql_query(
@@ -1032,17 +1127,16 @@ def api_feed():
             likes_map = dict(zip(likes_df['item_id'].astype(str), likes_df['likes'].astype(int)))
             for r in records:
                 r['likes'] = likes_map.get(str(r['id']), 0)
-        conn.close()
-        return jsonify(records)
+        response = jsonify(records)
+        return add_cache_headers(response, 120)
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)})
 
 
 @app.route('/api/admin/retag-models')
 def retag_models():
     """Retroactively tag existing news_scanner articles with detected model names."""
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         cursor = conn.cursor()
         cursor.execute(
@@ -1051,7 +1145,6 @@ def retag_models():
         tracked_models = sorted([r[0] for r in cursor.fetchall() if r[0]], key=len, reverse=True)
 
         if not tracked_models:
-            conn.close()
             return jsonify({'tagged': 0, 'message': 'No tracked models in DB yet'})
 
         df = pd.read_sql_query(
@@ -1081,10 +1174,8 @@ def retag_models():
                 tagged += 1
 
         conn.commit()
-        conn.close()
         return jsonify({'tagged': tagged, 'total': len(df), 'tracked_models': len(tracked_models)})
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)}), 500
 
 
@@ -1096,39 +1187,39 @@ def api_sources():
     base_weight = round(100.0 / source_count)
     weights = [base_weight] * source_count
     weights[-1] = 100 - sum(weights[:-1])
-    response = []
+    result = []
     for source, weight in zip(SOURCES, weights):
         name = source.get('name', '')
         label = source.get('label') or name.replace('_', ' ').replace('-', ' ').title()
         item = dict(source)
         item['weight'] = int(weight)
         item['label'] = label
-        response.append(item)
-    return jsonify(convert_pandas_types(response))
+        result.append(item)
+    response = jsonify(convert_pandas_types(result))
+    return add_cache_headers(response, 3600)
 
 
 @app.route('/api/stats')
 def api_stats():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         models_count = pd.read_sql_query("SELECT COUNT(DISTINCT model) as count FROM snapshots", conn).iloc[0]['count']
         feed_count = pd.read_sql_query("SELECT COUNT(*) as count FROM feed_entries", conn).iloc[0]['count']
         last_update = pd.read_sql_query("SELECT MAX(snapshot_timestamp) as last FROM snapshots", conn).iloc[0]['last']
-        conn.close()
-        return jsonify({
+        response = jsonify({
             'models': int(models_count),
             'feed_entries': int(feed_count),
             'sources': len(SOURCES),
             'last_update': last_update
         })
+        return add_cache_headers(response, 300)
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)})
 
 
 @app.route('/api/stats/weekly')
 def api_weekly_stats():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         from datetime import datetime, timedelta
         seven_days_ago = (datetime.now() - timedelta(days=7)).isoformat()
@@ -1171,7 +1262,6 @@ def api_weekly_stats():
             WHERE snapshot_timestamp > ?
         ''', conn, params=(twenty_five_hours_ago,)).iloc[0]['count']
 
-        conn.close()
         return jsonify({
             'rank_changes': int(rank_changes),
             'new_models': int(new_models),
@@ -1182,7 +1272,6 @@ def api_weekly_stats():
             'total_sources': len(SOURCES),
         })
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)}), 500
 
 
@@ -1200,7 +1289,7 @@ def rss_feed():
     models_param = request.args.get('models', '')
     watchlist_models = [m.strip() for m in models_param.split(',') if m.strip()]
 
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         df = pd.read_sql_query('''
             SELECT id, headline, body, source, tier, type, created_at, model
@@ -1209,9 +1298,7 @@ def rss_feed():
             ORDER BY created_at DESC
             LIMIT 100
         ''', conn)
-        conn.close()
     except Exception as e:
-        conn.close()
         return Response('Error generating feed', status=500)
 
     if watchlist_models:
@@ -1295,14 +1382,12 @@ def rss_feed():
     </channel>
 </rss>'''
 
-    return Response(
+    rss_response = Response(
         rss_xml,
         mimetype='application/rss+xml',
-        headers={
-            'Cache-Control': 'public, max-age=3600',
-            'X-Content-Type-Options': 'nosniff'
-        }
+        headers={'X-Content-Type-Options': 'nosniff'}
     )
+    return add_cache_headers(rss_response, 3600)
 
 
 # ============================================
@@ -1311,7 +1396,7 @@ def rss_feed():
 
 @app.route('/api/data/full')
 def api_data_full():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         source_data = {}
         for source in SOURCES:
@@ -1339,7 +1424,6 @@ def api_data_full():
         composites = get_composite_scores()
         prices = get_model_prices()
 
-        conn.close()
         return jsonify(convert_pandas_types({
             'composites': composites.to_dict('records'),
             'sources': source_data,
@@ -1348,7 +1432,6 @@ def api_data_full():
             'generated_at': datetime.now().isoformat()
         }))
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)}), 500
 
 
@@ -1368,7 +1451,7 @@ def api_data_prices():
 def api_data_history(model_name):
     from urllib.parse import unquote
     decoded = unquote(model_name)
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db()
     try:
         history = {}
         for source in SOURCES:
@@ -1383,11 +1466,28 @@ def api_data_history(model_name):
             ''', conn, params=(name, decoded, f'%{decoded}%'))
             if not df.empty:
                 history[name] = df.to_dict('records')
-        conn.close()
         return jsonify(convert_pandas_types(history))
     except Exception as e:
-        conn.close()
         return jsonify({'error': str(e)}), 500
+
+
+# ============================================
+# WARMUP — pre-load composite scores on worker start
+# ============================================
+
+_warmup_cache = {}
+
+
+def warmup():
+    try:
+        print('🔥 Warming up composite score cache...')
+        _warmup_cache['composites'] = get_composite_scores()
+        print(f'✅ Warmup complete — {len(_warmup_cache["composites"])} models loaded')
+    except Exception as e:
+        print(f'⚠️ Warmup failed: {e}')
+
+
+warmup()
 
 
 # ============================================
