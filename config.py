@@ -898,9 +898,9 @@ def bulk_normalize_model_names(names_list):
     for p in unique_precleaned:
         if p in cached:
             continue
-        ollama_result = _ollama_normalize(p)
-        if ollama_result and validate_normalization(p, ollama_result):
-            raw_canonical = ollama_result
+        llm_result = _llm_normalize(p)
+        if llm_result and validate_normalization(p, llm_result):
+            raw_canonical = llm_result
         else:
             raw_canonical = p
         canonical = find_canonical_match(raw_canonical)
